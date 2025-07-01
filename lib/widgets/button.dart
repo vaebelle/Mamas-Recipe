@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 class Button extends StatelessWidget {
   final Function()? onTap;
@@ -13,13 +13,17 @@ class Button extends StatelessWidget {
         padding: const EdgeInsets.all(12.0),
         margin: const EdgeInsets.symmetric(horizontal: 25.0),
         decoration: BoxDecoration(
-          color: Colors.blue,
+          color: CupertinoColors.systemBlue,
           borderRadius: BorderRadius.circular(12.0),
         ),
         child: Center(
           child: Text(
             text,
-            style: const TextStyle(color: Colors.white, fontSize: 16.0),
+            style: const TextStyle(
+              color: CupertinoColors.white,
+              fontSize: 16.0,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ),
