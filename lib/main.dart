@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mama_recipe/screens/home.dart';
+import 'package:mama_recipe/screens/login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,8 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'Poppins'),
-      home: const HomePage(),
+      home: Login(),
     );
   }
 }
-
