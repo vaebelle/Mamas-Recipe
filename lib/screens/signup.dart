@@ -1,18 +1,100 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:mama_recipe/widgets/textfield.dart';
 import 'package:mama_recipe/widgets/button.dart';
 import 'package:mama_recipe/screens/login.dart';
+import 'package:mama_recipe/services/auth_service.dart';
+import 'package:mama_recipe/screens/home.dart';
 
-class Signup extends StatelessWidget {
+class Signup extends StatefulWidget {
   Signup({super.key});
 
-  // text editing controllers
-  final usernameController = TextEditingController();
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  final confirmPasswordController = TextEditingController();
+  @override
+  State<Signup> createState() => _SignupState();
+}
 
-  void signUp() {}
+class _SignupState extends State<Signup> {
+  // text editing controllers
+  // final TextEditingController usernameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  // final confirmPasswordController = TextEditingController();
+  String errorMessage = "";
+
+  bool isLoading = false;
+
+  @override
+  void dispose() {
+    // usernameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    // confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void signUp() async {
+    try {
+      await authService.value.createAccount(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          CupertinoPageRoute(builder: (context) => const HomePage()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        errorMessage = e.message ?? "There is an error";
+      });
+    }
+  }
+
+  void popPage() {
+    Navigator.pop(context);
+  }
+
+  // Future<void> signUp(BuildContext context) async {
+  //   if (usernameController.text.trim().isEmpty) {
+  //     showErrorDialog(context, "Please enter your name.");
+  //     return;
+  //   }
+
+  //   if (emailController.text.trim().isEmpty) {
+  //     showErrorDialog(context, "Please enter your email.");
+  //     return;
+  //   }
+
+  //   if (passwordController.text.trim().isEmpty) {
+  //     showErrorDialog(context, "Please enter your password.");
+  //     return;
+  //   }
+
+  //   if (passwordController.text != confirmPasswordController.text) {
+  //     showErrorDialog(context, "Password do not match.");
+  //     return;
+  //   }
+
+  //   // TODO: Implement sign up logic here (e.g., call API, handle loading state in a StatefulWidget)
+  // }
+
+  // void showErrorDialog(BuildContext context, String message) {
+  //   showCupertinoDialog(
+  //     context: context,
+  //     builder: (context) => CupertinoAlertDialog(
+  //       title: const Text('Error'),
+  //       content: Text(message),
+  //       actions: [
+  //         CupertinoDialogAction(
+  //           child: const Text('OK'),
+  //           onPressed: () => Navigator.pop(context),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -56,12 +138,11 @@ class Signup extends StatelessWidget {
                 const SizedBox(height: 50),
 
                 // name textfield
-                CustomTextField(
-                  controller: usernameController,
-                  hintText: "Name",
-                  obscureText: false,
-                ),
-
+                // CustomTextField(
+                //   controller: usernameController,
+                //   hintText: "Name",
+                //   obscureText: false,
+                // ),
                 const SizedBox(height: 20),
 
                 // email textfield
@@ -83,12 +164,11 @@ class Signup extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 // confirm password textfield
-                CustomTextField(
-                  controller: confirmPasswordController,
-                  hintText: "Confirm Password",
-                  obscureText: true,
-                ),
-
+                // CustomTextField(
+                //   controller: confirmPasswordController,
+                //   hintText: "Confirm Password",
+                //   obscureText: true,
+                // ),
                 const SizedBox(height: 20),
 
                 // sign up button

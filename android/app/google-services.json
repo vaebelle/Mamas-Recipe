@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "217199522378",
+    "project_id": "mamas-recipe-c3e36",
+    "storage_bucket": "mamas-recipe-c3e36.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:217199522378:android:5e5781e2beb9b1c63f6cb3",
+        "android_client_info": {
+          "package_name": "com.example.mama_recipe"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "217199522378-hnj4lmdsq4qup1vo0evonvjon0r8ogfh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mama_recipe",
+            "certificate_hash": "567cae025ce389c725aff4317d0182d7a15b384c"
+          }
+        },
+        {
+          "client_id": "217199522378-48ml0vev2vmaskjdg1mo1416iddi80l8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0F_q78k3U0JY0yZY99nGxMkKr16HsAQE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "217199522378-48ml0vev2vmaskjdg1mo1416iddi80l8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "217199522378-v5g8jqu7mlh21uh7bnv30j7o27skk4b8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mamaRecipe"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
