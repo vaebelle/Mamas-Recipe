@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:mama_recipe/widgets/sharedPreference.dart';
 
 class CustomTextField extends StatelessWidget {
   final controller;
@@ -21,11 +22,15 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = SharedPreferencesHelper.instance.isDarkMode;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25.0),
       child: Container(
         decoration: BoxDecoration(
-          color: CupertinoColors.systemGrey6,
+          color: isDarkMode
+              ? const Color(0xFF2C2C2E)
+              : CupertinoColors.systemGrey6,
           borderRadius: BorderRadius.circular(borderRadius),
           border: Border.all(color: CupertinoColors.systemGrey4, width: 1.0),
         ),
@@ -33,8 +38,14 @@ class CustomTextField extends StatelessWidget {
           controller: controller,
           obscureText: obscureText,
           placeholder: hintText,
-          placeholderStyle: const TextStyle(color: CupertinoColors.systemGrey2),
-          style: const TextStyle(color: CupertinoColors.black),
+          placeholderStyle: TextStyle(
+            color: isDarkMode
+                ? const Color(0xFFAEAEB2)
+                : CupertinoColors.systemGrey2,
+          ),
+          style: TextStyle(
+            color: isDarkMode ? CupertinoColors.white : CupertinoColors.black,
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
           prefix: pathName != ' '
               ? Padding(
@@ -43,7 +54,9 @@ class CustomTextField extends StatelessWidget {
                     pathName,
                     width: iconSize,
                     height: iconSize,
-                    color: CupertinoColors.systemGrey2,
+                    color: isDarkMode
+                        ? const Color(0xFFAEAEB2)
+                        : CupertinoColors.systemGrey2,
                   ),
                 )
               : null,
