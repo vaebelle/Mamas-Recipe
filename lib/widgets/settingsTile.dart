@@ -8,10 +8,10 @@ class SettingsTile extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? iconColor;
   final bool isDestructive;
-  final Color? titleColor; // New parameter
-  final Color? subtitleColor; // New parameter
-  final Color? backgroundColor; // New parameter
-  final Color? separatorColor; // New parameter
+  final Color? titleColor;
+  final Color? subtitleColor;
+  final Color? backgroundColor;
+  final Color? separatorColor;
 
   const SettingsTile({
     super.key,
@@ -22,10 +22,10 @@ class SettingsTile extends StatelessWidget {
     this.onTap,
     this.iconColor,
     this.isDestructive = false,
-    this.titleColor, // New parameter
-    this.subtitleColor, // New parameter
-    this.backgroundColor, // New parameter
-    this.separatorColor, // New parameter
+    this.titleColor,
+    this.subtitleColor,
+    this.backgroundColor,
+    this.separatorColor,
   });
 
   @override
@@ -108,15 +108,15 @@ class SettingsTile extends StatelessWidget {
 class SettingsSection extends StatelessWidget {
   final String title;
   final List<Widget> children;
-  final Color? backgroundColor; // New parameter
-  final Color? titleColor; // New parameter
+  final Color? backgroundColor;
+  final Color? titleColor;
 
   const SettingsSection({
     super.key,
     required this.title,
     required this.children,
-    this.backgroundColor, // New parameter
-    this.titleColor, // New parameter
+    this.backgroundColor,
+    this.titleColor,
   });
 
   @override

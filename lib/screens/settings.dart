@@ -13,7 +13,6 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  // Backend state variables
   bool isDarkMode = false;
   bool isLoading = false;
   final TextEditingController _emailController = TextEditingController();
@@ -40,16 +39,14 @@ class _SettingsState extends State<Settings> {
     });
   }
 
-  /// Handle dark mode toggle
   Future<void> _toggleDarkMode(bool value) async {
     setState(() {
       isDarkMode = value;
     });
-    // Save the preference to persistent storage
+
     await SharedPreferencesHelper.instance.setDarkMode(value);
   }
 
-  /// Handle notifications settings
   void _handleNotifications() {
     _showSuccessDialog(
       'Coming Soon',
@@ -63,7 +60,6 @@ class _SettingsState extends State<Settings> {
     super.dispose();
   }
 
-  /// Initialize user data when the page loads
   void _initializeUserData() {
     final currentUser = authService.value.currentUser;
     if (currentUser?.email != null) {
@@ -79,7 +75,7 @@ class _SettingsState extends State<Settings> {
       return;
     }
 
-    Navigator.pop(context); // Close the dialog first
+    Navigator.pop(context);
 
     setState(() {
       isLoading = true;
@@ -116,7 +112,7 @@ class _SettingsState extends State<Settings> {
 
   /// Handle user logout functionality
   Future<void> _logout() async {
-    Navigator.pop(context); // Close dialog
+    Navigator.pop(context);
 
     setState(() {
       isLoading = true;
@@ -126,7 +122,6 @@ class _SettingsState extends State<Settings> {
       await authService.value.signOut();
 
       if (mounted) {
-        // Navigate to login and clear the entire navigation stack
         Navigator.pushAndRemoveUntil(
           context,
           CupertinoPageRoute(builder: (context) => const Login()),
@@ -159,10 +154,6 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  // ===========================
-  // ADAPTIVE COLOR HELPERS
-  // ===========================
-
   Color _adaptiveBackground(BuildContext context) {
     return isDarkMode
         ? _darkBackground
@@ -186,10 +177,6 @@ class _SettingsState extends State<Settings> {
   Color _adaptiveSeparator(BuildContext context) {
     return isDarkMode ? _darkSeparator : CupertinoColors.separator;
   }
-
-  // ===========================
-  // DIALOG METHODS
-  // ===========================
 
   void _showResetPasswordDialog() {
     showCupertinoDialog(
@@ -333,10 +320,6 @@ class _SettingsState extends State<Settings> {
       ),
     );
   }
-
-  // ===========================
-  // UI BUILDING METHODS
-  // ===========================
 
   Widget _buildUserProfile() {
     final currentUser = authService.value.currentUser;
@@ -520,10 +503,7 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  // ===========================
-  // MAIN UI BUILD METHOD
-  // ===========================
-
+  // Main UI build
   @override
   Widget build(BuildContext context) {
     return CupertinoTheme(

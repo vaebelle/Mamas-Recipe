@@ -212,7 +212,7 @@ class _LoginState extends State<Login> {
 
                   Button(
                     onTap: isLoading ? null : signInWithGoogle,
-                    text: isLoading ? "Loading..." : "Sign in with Google",
+                    text: isLoading ? "Loading..." : "Continue with Google",
                     borderRadius: 20.0,
                     color: CupertinoColors.white,
                     textColor: CupertinoColors.black,
