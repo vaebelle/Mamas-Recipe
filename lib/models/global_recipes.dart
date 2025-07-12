@@ -46,12 +46,16 @@ class GlobalRecipes {
       gRecipeInstructions: map['gRecipe_instructions'] ?? '',
       gRecipeImageUrl: map['gRecipe_image_url'] ?? '',
       tags: map['tags'] ?? '',
-      createdAt: map['created_at'] is Timestamp 
+      createdAt: map['created_at'] is Timestamp
           ? (map['created_at'] as Timestamp).toDate()
-          : DateTime.parse(map['created_at'] ?? DateTime.now().toIso8601String()),
-      updatedAt: map['updated_at'] is Timestamp 
+          : DateTime.parse(
+              map['created_at'] ?? DateTime.now().toIso8601String(),
+            ),
+      updatedAt: map['updated_at'] is Timestamp
           ? (map['updated_at'] as Timestamp).toDate()
-          : DateTime.parse(map['updated_at'] ?? DateTime.now().toIso8601String()),
+          : DateTime.parse(
+              map['updated_at'] ?? DateTime.now().toIso8601String(),
+            ),
     );
   }
 
@@ -71,19 +75,29 @@ class GlobalRecipes {
   // Helper method to convert ingredients string to list
   List<String> get ingredientsList {
     if (gRecipeIngredients.isEmpty) return [];
-    return gRecipeIngredients.split('\n').where((ingredient) => ingredient.trim().isNotEmpty).toList();
+    return gRecipeIngredients
+        .split('\n')
+        .where((ingredient) => ingredient.trim().isNotEmpty)
+        .toList();
   }
 
   // Helper method to convert instructions string to list
   List<String> get instructionsList {
     if (gRecipeInstructions.isEmpty) return [];
-    return gRecipeInstructions.split('\n').where((instruction) => instruction.trim().isNotEmpty).toList();
+    return gRecipeInstructions
+        .split('\n')
+        .where((instruction) => instruction.trim().isNotEmpty)
+        .toList();
   }
 
   // Helper method to convert tags string to list
   List<String> get tagsList {
     if (tags.isEmpty) return [];
-    return tags.split(',').map((tag) => tag.trim()).where((tag) => tag.isNotEmpty).toList();
+    return tags
+        .split(',')
+        .map((tag) => tag.trim())
+        .where((tag) => tag.isNotEmpty)
+        .toList();
   }
 
   // Search method to check if recipe contains search terms

@@ -1,20 +1,26 @@
 import 'package:flutter/cupertino.dart';
 import 'package:mama_recipe/screens/home.dart';
 import 'package:mama_recipe/screens/login.dart';
+import 'package:mama_recipe/screens/settings.dart'
+    as app_settings; // Add this import
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:mama_recipe/widgets/sharedPreference.dart';
+import 'package:mama_recipe/screens/authentication.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // FirebaseFirestore.instance.settings = const Settings(
-  //   persistenceEnabled: true,
-  // );
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  FirebaseFirestore.instance.settings = const Settings (
+  await SharedPreferencesHelper.instance.init();
+
+  // Use the specific Firestore Settings class
+  FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
   );
+
   runApp(const MyApp());
 }
 
@@ -30,7 +36,8 @@ class MyApp extends StatelessWidget {
           textStyle: TextStyle(fontFamily: 'Poppins'),
         ),
       ),
-      home: Login(),
+      home: Authentication(), // Changed from HomePage() to Login()
+      // home: app_settings.Settings(), // Changed from Login() to Settings()
     );
   }
 }
