@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:mama_recipe/widgets/sharedPreference.dart';
+import 'package:mama_recipe/screens/authentication.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +36,7 @@ class MyApp extends StatelessWidget {
           textStyle: TextStyle(fontFamily: 'Poppins'),
         ),
       ),
-      home: Login(), // Changed from HomePage() to Login()
+      home: Authentication(), // Changed from HomePage() to Login()
       // home: app_settings.Settings(), // Changed from Login() to Settings()
     );
   }

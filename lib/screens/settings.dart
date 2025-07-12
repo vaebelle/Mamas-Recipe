@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mama_recipe/services/auth_service.dart';
 import 'package:mama_recipe/screens/login.dart';
+import 'package:mama_recipe/screens/authentication.dart';
 import 'package:mama_recipe/widgets/settingsTile.dart';
 import 'package:mama_recipe/widgets/sharedPreference.dart';
 
@@ -110,9 +111,9 @@ class _SettingsState extends State<Settings> {
     }
   }
 
-  /// Handle user logout functionality
+  /// Handle user logout functionality - FIXED
   Future<void> _logout() async {
-    Navigator.pop(context);
+    Navigator.pop(context); // Close the dialog first
 
     setState(() {
       isLoading = true;
@@ -122,9 +123,13 @@ class _SettingsState extends State<Settings> {
       await authService.value.signOut();
 
       if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          CupertinoPageRoute(builder: (context) => const Login()),
+        setState(() {
+          isLoading = false;
+        });
+
+        // Navigate back to Authentication screen and clear the entire navigation stack
+        Navigator.of(context).pushAndRemoveUntil(
+          CupertinoPageRoute(builder: (context) => const Authentication()),
           (route) => false,
         );
       }
@@ -338,7 +343,7 @@ class _SettingsState extends State<Settings> {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: CupertinoColors.systemBlue,
+                color: CupertinoColors.systemOrange,
                 borderRadius: BorderRadius.circular(30),
               ),
               child: Icon(

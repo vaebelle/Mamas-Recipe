@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mama_recipe/services/auth_service.dart';
 import 'package:mama_recipe/widgets/textfield.dart';
 import 'package:mama_recipe/widgets/button.dart';
 import 'package:mama_recipe/widgets/sharedPreference.dart';
 import 'package:mama_recipe/screens/signup.dart';
-import 'package:mama_recipe/screens/home.dart';
+import 'package:mama_recipe/models/users.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -19,6 +20,13 @@ class _LoginState extends State<Login> {
   final passwordController = TextEditingController();
   bool isLoading = false;
 
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   void signIn() async {
     setState(() {
       isLoading = true;
@@ -30,12 +38,8 @@ class _LoginState extends State<Login> {
         password: passwordController.text.trim(),
       );
 
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          CupertinoPageRoute(builder: (context) => const HomePage()),
-        );
-      }
+      // No need to manually navigate - AuthWrapper will handle this automatically
+      // when the authentication state changes
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         String errorMessage;
@@ -88,19 +92,63 @@ class _LoginState extends State<Login> {
       final userCredential = await authService.value.loginWithGoogle();
 
       if (userCredential != null && mounted) {
-        Navigator.pushReplacement(
-          context,
-          CupertinoPageRoute(builder: (context) => const HomePage()),
-        );
+        // ADDED: Check if user document exists in Firestore, create if not
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .get();
+
+        if (!userDoc.exists) {
+          // Extract names from Google displayName
+          final displayName = userCredential.user?.displayName ?? '';
+          final names = displayName.split(' ');
+          final firstName = names.isNotEmpty ? names.first : '';
+          final lastName = names.length > 1 ? names.sublist(1).join(' ') : '';
+
+          // Create Users model for Google sign-in user
+          final newUser = Users(
+            userId: userCredential.user!.uid,
+            email: userCredential.user?.email ?? '',
+            firstName: firstName,
+            lastName: lastName,
+            password: '', // Google users don't have passwords
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+
+          // Save user data to Firestore
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userCredential.user!.uid)
+              .set(newUser.toMap());
+        }
+
+        // Authentication widget will handle navigation automatically
       } else if (mounted) {
         _showErrorDialog(
           'Sign In Failed',
           'Google sign-in was cancelled or failed. Please try again.',
         );
       }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        String errorMessage = authService.value.getErrorMessage(e);
+        _showErrorDialog('Google Sign In Failed', errorMessage);
+      }
+    } on FirebaseException catch (e) {
+      // Handle Firestore errors
+      if (mounted) {
+        _showErrorDialog(
+          'Database Error',
+          'Failed to save user data: ${e.message}',
+        );
+      }
     } catch (e) {
       if (mounted) {
-        _showErrorDialog('Google Sign In Failed', 'Error: ${e.toString()}');
+        _showErrorDialog(
+          'Google Sign In Failed',
+          'An unexpected error occurred. Please try again.',
+        );
       }
     } finally {
       if (mounted) {
@@ -283,7 +331,7 @@ class _LoginState extends State<Login> {
                           Navigator.push(
                             context,
                             CupertinoPageRoute(
-                              builder: (BuildContext context) => Signup(),
+                              builder: (BuildContext context) => const Signup(),
                             ),
                           );
                         },

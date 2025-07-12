@@ -1,24 +1,30 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mama_recipe/widgets/textfield.dart';
 import 'package:mama_recipe/widgets/button.dart';
 import 'package:mama_recipe/widgets/sharedPreference.dart';
 import 'package:mama_recipe/screens/login.dart';
 import 'package:mama_recipe/services/auth_service.dart';
-import 'package:mama_recipe/screens/home.dart';
+import 'package:mama_recipe/screens/authentication.dart';
+import 'package:mama_recipe/models/users.dart';
 
 class Signup extends StatefulWidget {
-  Signup({super.key});
+  const Signup({super.key});
 
   @override
   State<Signup> createState() => _SignupState();
 }
 
 class _SignupState extends State<Signup> {
+  // FIXED: Separate controllers for each field
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
+
   String errorMessage = "";
   bool isLoading = false;
   bool _showPasswordHints = false;
@@ -36,6 +42,8 @@ class _SignupState extends State<Signup> {
   @override
   void dispose() {
     passwordController.removeListener(() {});
+    firstNameController.dispose();
+    lastNameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
@@ -88,6 +96,39 @@ class _SignupState extends State<Signup> {
       isLoading = true;
     });
 
+    // ADDED: Basic validation for all fields
+    if (firstNameController.text.trim().isEmpty) {
+      setState(() {
+        errorMessage = "Please enter your first name";
+        isLoading = false;
+      });
+      return;
+    }
+
+    if (lastNameController.text.trim().isEmpty) {
+      setState(() {
+        errorMessage = "Please enter your last name";
+        isLoading = false;
+      });
+      return;
+    }
+
+    if (emailController.text.trim().isEmpty) {
+      setState(() {
+        errorMessage = "Please enter your email address";
+        isLoading = false;
+      });
+      return;
+    }
+
+    if (passwordController.text.trim().isEmpty) {
+      setState(() {
+        errorMessage = "Please enter a password";
+        isLoading = false;
+      });
+      return;
+    }
+
     if (passwordController.text != confirmPasswordController.text) {
       setState(() {
         errorMessage = "Passwords do not match";
@@ -108,68 +149,76 @@ class _SignupState extends State<Signup> {
     }
 
     try {
-      await authService.value.createAccount(
+      // Create the Firebase Auth account
+      final userCredential = await authService.value.createAccount(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          CupertinoPageRoute(builder: (context) => const HomePage()),
+      if (userCredential.user != null) {
+        // Set the display name in Firebase Auth
+        final displayName =
+            '${firstNameController.text.trim()} ${lastNameController.text.trim()}';
+        await userCredential.user!.updateDisplayName(displayName);
+
+        // Reload the user to get the updated display name
+        await userCredential.user!.reload();
+
+        // ADDED: Create Users model and save to Firestore
+        final newUser = Users(
+          userId: userCredential.user!.uid,
+          email: emailController.text.trim(),
+          firstName: firstNameController.text.trim(),
+          lastName: lastNameController.text.trim(),
+          password: '', // Don't store actual password for security
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         );
+
+        // Save user data to Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set(newUser.toMap());
+
+        if (mounted) {
+          // Clear form fields
+          firstNameController.clear();
+          lastNameController.clear();
+          emailController.clear();
+          passwordController.clear();
+          confirmPasswordController.clear();
+
+          // FIXED: Navigate to Authentication widget instead of directly to HomePage
+          Navigator.of(context).pushAndRemoveUntil(
+            CupertinoPageRoute(builder: (context) => const Authentication()),
+            (route) => false,
+          );
+        }
       }
     } on FirebaseAuthException catch (e) {
-      setState(() {
-        isLoading = false;
-        switch (e.code) {
-          case 'email-already-in-use':
-            errorMessage = 'An account already exists with this email address';
-            break;
-          case 'invalid-email':
-            errorMessage = 'Please enter a valid email address';
-            break;
-          case 'operation-not-allowed':
-            errorMessage = 'Email/password accounts are not enabled';
-            break;
-          default:
-            errorMessage = e.message ?? "Sign up failed";
-        }
-      });
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-        errorMessage = "An unexpected error occurred";
-      });
-    }
-  }
-
-  void signInWithGoogle() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = "";
-    });
-
-    try {
-      final userCredential = await authService.value.loginWithGoogle();
-
-      if (userCredential != null && mounted) {
-        Navigator.pushReplacement(
-          context,
-          CupertinoPageRoute(builder: (context) => const HomePage()),
-        );
-      } else if (mounted) {
+      if (mounted) {
         setState(() {
           isLoading = false;
-          errorMessage =
-              'Google sign-in was cancelled or failed. Please try again.';
+          // Use the auth service's error message handler for consistency
+          errorMessage = authService.value.getErrorMessage(e);
+        });
+      }
+    } on FirebaseException catch (e) {
+      // Handle Firestore errors
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          errorMessage = "Failed to save user data: ${e.message}";
         });
       }
     } catch (e) {
-      setState(() {
-        isLoading = false;
-        errorMessage = 'Google Sign In Failed: ${e.toString()}';
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          errorMessage = "An unexpected error occurred. Please try again.";
+        });
+      }
     }
   }
 
@@ -227,6 +276,25 @@ class _SignupState extends State<Signup> {
 
                   const SizedBox(height: 50),
 
+                  // FIXED: Use firstNameController
+                  CustomTextField(
+                    controller: firstNameController,
+                    hintText: "First Name",
+                    obscureText: false,
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // FIXED: Use lastNameController
+                  CustomTextField(
+                    controller: lastNameController,
+                    hintText: "Last Name",
+                    obscureText: false,
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // FIXED: Keep emailController for email field
                   CustomTextField(
                     controller: emailController,
                     hintText: "Email",
@@ -420,20 +488,6 @@ class _SignupState extends State<Signup> {
 
                   const SizedBox(height: 20),
 
-                  Button(
-                    onTap: isLoading ? null : signInWithGoogle,
-                    text: isLoading ? "Loading..." : "Sign up with Google",
-                    borderRadius: 20.0,
-                    color: CupertinoColors.white,
-                    textColor: CupertinoColors.black,
-                    border: Border.all(
-                      color: CupertinoColors.systemGrey4,
-                      width: 1.0,
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
                   if (isLoading)
                     const Padding(
                       padding: EdgeInsets.all(8.0),
@@ -495,7 +549,7 @@ class _SignupState extends State<Signup> {
                           Navigator.push(
                             context,
                             CupertinoPageRoute(
-                              builder: (BuildContext context) => Login(),
+                              builder: (BuildContext context) => const Login(),
                             ),
                           );
                         },

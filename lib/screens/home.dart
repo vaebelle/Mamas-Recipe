@@ -4,6 +4,8 @@ import 'package:mama_recipe/widgets/button.dart';
 import 'package:mama_recipe/widgets/slidingSegment.dart';
 import 'package:mama_recipe/widgets/card.dart';
 import 'package:mama_recipe/screens/newRecipe.dart';
+import 'package:mama_recipe/screens/settings.dart';
+import 'package:mama_recipe/widgets/sharedPreference.dart';
 
 final searchController = TextEditingController();
 
@@ -17,146 +19,195 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   RecipeCategory _selectedCategory = RecipeCategory.allRecipes;
   final List<bool> _favoriteStates = [false, true, false, true, false, false];
+  bool _isDarkMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loadThemePreference();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadThemePreference();
+    }
+  }
+
+  Future<void> _loadThemePreference() async {
+    final isDark = SharedPreferencesHelper.instance.isDarkMode;
+    if (mounted && isDark != _isDarkMode) {
+      setState(() {
+        _isDarkMode = isDark;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      backgroundColor: CupertinoColors.white,
-      navigationBar: navigationBar(),
-      child: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  // Category title and Add Recipe button
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _getCategoryDisplayName(_selectedCategory),
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: CupertinoColors.black,
+    return CupertinoTheme(
+      data: CupertinoThemeData(
+        brightness: _isDarkMode ? Brightness.dark : Brightness.light,
+      ),
+      child: CupertinoPageScaffold(
+        backgroundColor: _isDarkMode
+            ? const Color(0xFF1C1C1E)
+            : CupertinoColors.white,
+        navigationBar: navigationBar(),
+        child: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    // Category title and Add Recipe button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _getCategoryDisplayName(_selectedCategory),
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: _isDarkMode
+                                  ? CupertinoColors.white
+                                  : CupertinoColors.black,
+                            ),
                           ),
-                        ),
-                        CupertinoButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: _handleAddRecipe,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: CupertinoColors.systemOrange,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  CupertinoIcons.add,
-                                  color: CupertinoColors.white,
-                                  size: 16,
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Add Recipe',
-                                  style: TextStyle(
+                          CupertinoButton(
+                            padding: EdgeInsets.zero,
+                            onPressed: _handleAddRecipe,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: CupertinoColors.systemOrange,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.add,
                                     color: CupertinoColors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                                    size: 16,
                                   ),
-                                ),
-                              ],
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Add Recipe',
+                                    style: TextStyle(
+                                      color: CupertinoColors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  CustomTextField(
-                    controller: searchController,
-                    hintText: "Search recipe",
-                    obscureText: false,
-                    borderRadius: 13.0,
-                    pathName: "assets/icons/search.svg",
-                  ),
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                    child: CustomSegmentedControl<RecipeCategory>(
-                      groupValue: _selectedCategory,
-                      backgroundColor: CupertinoColors.systemGrey6,
-                      thumbColor: CupertinoColors.white,
-                      onValueChanged: (RecipeCategory? value) {
-                        if (value != null) {
-                          setState(() {
-                            _selectedCategory = value;
-                          });
-                        }
-                      },
-                      children: const <RecipeCategory, Widget>{
-                        RecipeCategory.allRecipes: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text(
-                            'All',
-                            style: TextStyle(
-                              color: CupertinoColors.black,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        RecipeCategory.favorites: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text(
-                            'Favorites',
-                            style: TextStyle(
-                              color: CupertinoColors.black,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        RecipeCategory.myRecipes: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text(
-                            'Personal',
-                            style: TextStyle(
-                              color: CupertinoColors.black,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      },
+                    CustomTextField(
+                      controller: searchController,
+                      hintText: "Search recipe",
+                      obscureText: false,
+                      borderRadius: 13.0,
+                      pathName: "assets/icons/search.svg",
                     ),
-                  ),
-                  const SizedBox(height: 15),
-                ],
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                      child: CustomSegmentedControl<RecipeCategory>(
+                        groupValue: _selectedCategory,
+                        backgroundColor: _isDarkMode
+                            ? const Color(0xFF2C2C2E)
+                            : CupertinoColors.systemGrey6,
+                        thumbColor: _isDarkMode
+                            ? const Color(0xFF3A3A3C)
+                            : CupertinoColors.white,
+                        onValueChanged: (RecipeCategory? value) {
+                          if (value != null) {
+                            setState(() {
+                              _selectedCategory = value;
+                            });
+                          }
+                        },
+                        children: <RecipeCategory, Widget>{
+                          RecipeCategory.allRecipes: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              'All',
+                              style: TextStyle(
+                                color: _isDarkMode
+                                    ? CupertinoColors.white
+                                    : CupertinoColors.black,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          RecipeCategory.favorites: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              'Favorites',
+                              style: TextStyle(
+                                color: _isDarkMode
+                                    ? CupertinoColors.white
+                                    : CupertinoColors.black,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          RecipeCategory.myRecipes: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              'Personal',
+                              style: TextStyle(
+                                color: _isDarkMode
+                                    ? CupertinoColors.white
+                                    : CupertinoColors.black,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                  ],
+                ),
               ),
-            ),
-            // Recipe cards as a sliver
-            _buildRecipeSliver(),
-          ],
+              // Recipe cards as a sliver
+              _buildRecipeSliver(),
+            ],
+          ),
         ),
       ),
     );
@@ -180,13 +231,17 @@ class _HomePageState extends State<HomePage> {
                     ? CupertinoIcons.book
                     : CupertinoIcons.search,
                 size: 64,
-                color: CupertinoColors.systemGrey3,
+                color: _isDarkMode
+                    ? const Color(0xFFAEAEB2)
+                    : CupertinoColors.systemGrey3,
               ),
               const SizedBox(height: 16),
               Text(
                 _getEmptyStateMessage(_selectedCategory),
-                style: const TextStyle(
-                  color: CupertinoColors.systemGrey,
+                style: TextStyle(
+                  color: _isDarkMode
+                      ? const Color(0xFFAEAEB2)
+                      : CupertinoColors.systemGrey,
                   fontSize: 16,
                 ),
                 textAlign: TextAlign.center,
@@ -207,6 +262,41 @@ class _HomePageState extends State<HomePage> {
           method: recipe['method'],
           tags: List<String>.from(recipe['tags']),
           isFavorite: _favoriteStates[recipe['id'] % _favoriteStates.length],
+          backgroundColor: _isDarkMode
+              ? const Color(0xFF2C2C2E)
+              : CupertinoColors.white,
+          nameStyle: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: _isDarkMode ? CupertinoColors.white : CupertinoColors.black,
+          ),
+          sectionHeaderStyle: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: _isDarkMode ? CupertinoColors.white : CupertinoColors.black,
+          ),
+          ingredientStyle: TextStyle(
+            fontSize: 14,
+            color: _isDarkMode ? CupertinoColors.white : CupertinoColors.black,
+            height: 1.3,
+          ),
+          methodStyle: TextStyle(
+            fontSize: 14,
+            color: _isDarkMode
+                ? const Color(0xFFAEAEB2)
+                : CupertinoColors.systemGrey,
+            height: 1.4,
+          ),
+          tagBackgroundColor: _isDarkMode
+              ? const Color(0xFF3A3A3C)
+              : CupertinoColors.systemGrey6,
+          tagStyle: TextStyle(
+            fontSize: 12,
+            color: _isDarkMode
+                ? const Color(0xFFAEAEB2)
+                : CupertinoColors.systemGrey,
+            fontWeight: FontWeight.w500,
+          ),
           onEdit: _selectedCategory == RecipeCategory.myRecipes
               ? () {
                   _handleEditRecipe(recipe['id']);
@@ -379,29 +469,33 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _handleDeleteRecipe(int recipeId) {
-    // Show confirmation dialog and delete recipe
     showCupertinoDialog(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('Delete Recipe'),
-        content: const Text(
-          'Are you sure you want to delete this recipe? This action cannot be undone.',
+      builder: (context) => CupertinoTheme(
+        data: CupertinoThemeData(
+          brightness: _isDarkMode ? Brightness.dark : Brightness.light,
         ),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.pop(context),
+        child: CupertinoAlertDialog(
+          title: const Text('Delete Recipe'),
+          content: const Text(
+            'Are you sure you want to delete this recipe? This action cannot be undone.',
           ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            child: const Text('Delete'),
-            onPressed: () {
-              Navigator.pop(context);
-              print('Delete recipe with ID: $recipeId');
-              // Implement delete logic here
-            },
-          ),
-        ],
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
+            ),
+            CupertinoDialogAction(
+              isDestructiveAction: true,
+              child: const Text('Delete'),
+              onPressed: () {
+                Navigator.pop(context);
+                print('Delete recipe with ID: $recipeId');
+                // Implement delete logic here
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -449,19 +543,40 @@ class _HomePageState extends State<HomePage> {
         // Refresh the UI if needed
       });
     }
+
+    // Reload theme when returning from any navigation
+    await _loadThemePreference();
   }
 
   CupertinoNavigationBar navigationBar() {
-    return const CupertinoNavigationBar(
+    return CupertinoNavigationBar(
       middle: Text(
         'Mama\'s Recipes',
         style: TextStyle(
-          color: CupertinoColors.black,
+          color: _isDarkMode ? CupertinoColors.white : CupertinoColors.black,
           fontSize: 18,
           fontWeight: FontWeight.bold,
         ),
       ),
-      backgroundColor: CupertinoColors.white,
+      trailing: CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (context) => const Settings()),
+          );
+          // Reload theme when returning from Settings
+          await _loadThemePreference();
+        },
+        child: const Icon(
+          CupertinoIcons.bars,
+          color: CupertinoColors.systemOrange,
+          size: 24,
+        ),
+      ),
+      backgroundColor: _isDarkMode
+          ? const Color(0xFF1C1C1E)
+          : CupertinoColors.white,
       border: null,
     );
   }
