@@ -5,6 +5,7 @@ import 'package:mama_recipe/widgets/slidingSegment.dart';
 import 'package:mama_recipe/widgets/card.dart';
 import 'package:mama_recipe/screens/newRecipe.dart';
 import 'package:mama_recipe/screens/settings.dart';
+import 'package:mama_recipe/screens/recipeDetails.dart';
 import 'package:mama_recipe/widgets/sharedPreference.dart';
 
 final searchController = TextEditingController();
@@ -509,9 +510,22 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   void _handleRecipeTap(int recipeId) {
-    // Navigate to recipe details screen
-    print('Open recipe details for ID: $recipeId');
-    // Navigator.push(context, CupertinoPageRoute(builder: (context) => RecipeDetailsScreen(recipeId: recipeId)));
+    // Find the recipe data
+    final allRecipes = _getRecipesForCategory(RecipeCategory.allRecipes);
+    try {
+      final recipe = allRecipes.firstWhere((r) => r['id'] == recipeId);
+
+      Navigator.push(
+        context,
+        CupertinoPageRoute(
+          builder: (context) =>
+              RecipeDetailsScreen(recipe: recipe, isDarkMode: _isDarkMode),
+        ),
+      );
+    } catch (e) {
+      // Recipe not found, handle error gracefully
+      print('Recipe with ID $recipeId not found');
+    }
   }
 
   String _getCategoryDisplayName(RecipeCategory category) {
