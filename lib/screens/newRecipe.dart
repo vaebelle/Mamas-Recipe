@@ -2,6 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:mama_recipe/widgets/textfield.dart';
 import 'package:mama_recipe/widgets/button.dart';
 import 'package:mama_recipe/widgets/sharedPreference.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'dart:io';
 
 class CreateRecipe extends StatefulWidget {
   const CreateRecipe({super.key});
@@ -16,7 +20,8 @@ class _CreateRecipeState extends State<CreateRecipe> {
   final TextEditingController _methodController = TextEditingController();
   final TextEditingController _tagsController = TextEditingController();
 
-  String? _selectedImagePath;
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void dispose() {
@@ -135,6 +140,13 @@ class _CreateRecipeState extends State<CreateRecipe> {
                 // Recipe Image
                 _buildSectionLabel('Recipe Image'),
                 const SizedBox(height: 12),
+
+                // Show selected image if available
+                if (_selectedImage != null) ...[
+                  _buildSelectedImagePreview(),
+                  const SizedBox(height: 12),
+                ],
+
                 _buildImageSelector(),
                 const SizedBox(height: 40),
 
@@ -162,6 +174,66 @@ class _CreateRecipeState extends State<CreateRecipe> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectedImagePreview() {
+    final isDarkMode = SharedPreferencesHelper.instance.isDarkMode;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+      child: Container(
+        width: double.infinity,
+        height: 200,
+        decoration: BoxDecoration(
+          color: isDarkMode
+              ? const Color(0xFF2C2C2E)
+              : CupertinoColors.systemGrey6,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDarkMode
+                ? const Color(0xFF38383A)
+                : CupertinoColors.systemGrey4,
+            width: 1.0,
+          ),
+        ),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(11),
+              child: Image.file(
+                _selectedImage!,
+                width: double.infinity,
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedImage = null;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: CupertinoColors.systemRed.withOpacity(0.8),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    CupertinoIcons.xmark,
+                    color: CupertinoColors.white,
+                    size: 16,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -340,26 +412,81 @@ class _CreateRecipeState extends State<CreateRecipe> {
     );
   }
 
-  void _selectFromCamera() {
-    // Implement camera selection
-    print('Select from camera');
-    setState(() {
-      _selectedImagePath = 'camera_image.jpg';
-    });
+  Future<void> _selectFromCamera() async {
+    try {
+      // Direct permission request
+      final cameraStatus = await Permission.camera.request();
 
-    // Show confirmation
-    _showImageSelectedDialog('Camera');
+      if (cameraStatus.isGranted) {
+        final XFile? image = await _picker.pickImage(
+          source: ImageSource.camera,
+          maxWidth: 1920,
+          maxHeight: 1080,
+          imageQuality: 85,
+        );
+
+        if (image != null) {
+          setState(() {
+            _selectedImage = File(image.path);
+          });
+          _showImageSelectedDialog('Camera');
+        } else {
+          print('No capture');
+        }
+      } else if (cameraStatus.isDenied) {
+        _showErrorDialog('Camera permission was denied. Please try again.');
+      } else if (cameraStatus.isPermanentlyDenied) {
+        _showSettingsDialog(
+          'Camera access is permanently denied. Please enable it in Settings.',
+        );
+      }
+    } catch (e) {
+      print('Camera error: $e');
+      _showErrorDialog('Failed to access camera: ${e.toString()}');
+    }
   }
 
-  void _selectFromGallery() {
-    // Implement gallery selection
-    print('Select from gallery');
-    setState(() {
-      _selectedImagePath = 'gallery_image.jpg';
-    });
+  Future<void> _selectFromGallery() async {
+    try {
+      PermissionStatus galleryStatus;
 
-    // Show confirmation
-    _showImageSelectedDialog('Gallery');
+      if (Platform.isAndroid) {
+        galleryStatus = await Permission.photos.request();
+
+        if (galleryStatus.isDenied) {
+          galleryStatus = await Permission.storage.request();
+        }
+      } else {
+        galleryStatus = await Permission.photos.request();
+      }
+
+      if (galleryStatus.isGranted) {
+        final XFile? image = await _picker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 1920,
+          maxHeight: 1080,
+          imageQuality: 85,
+        );
+
+        if (image != null) {
+          setState(() {
+            _selectedImage = File(image.path);
+          });
+          _showImageSelectedDialog('Gallery');
+        } else {
+          print('No image');
+        }
+      } else if (galleryStatus.isDenied) {
+        _showErrorDialog('Photo access was denied. Please try again.');
+      } else if (galleryStatus.isPermanentlyDenied) {
+        _showSettingsDialog(
+          'Photo access is permanently denied. Please enable it in Settings.',
+        );
+      }
+    } catch (e) {
+      print('Gallery error: $e');
+      _showErrorDialog('Failed to access gallery: ${e.toString()}');
+    }
   }
 
   void _showImageSelectedDialog(String source) {
@@ -373,7 +500,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
         ),
         child: CupertinoAlertDialog(
           title: const Text('Image Selected'),
-          content: Text('Image selected from $source'),
+          content: Text('Image selected from $source successfully!'),
           actions: [
             CupertinoDialogAction(
               child: const Text('OK'),
@@ -418,20 +545,20 @@ class _CreateRecipeState extends State<CreateRecipe> {
 
     // Create recipe object
     Map<String, dynamic> newRecipe = {
-      'id': DateTime.now().millisecondsSinceEpoch, // Simple ID generation
+      'id': DateTime.now().millisecondsSinceEpoch,
       'name': _titleController.text.trim(),
       'ingredients': ingredients,
       'method': _methodController.text.trim(),
       'tags': tags,
-      'imagePath': _selectedImagePath ?? 'assets/images/placeholder.jpg',
+      'imagePath': _selectedImage?.path ?? 'assets/images/placeholder.jpg',
       'isFavorite': false,
       'isMyRecipe': true,
+      'selectedImageFile': _selectedImage,
     };
 
     // TODO: Save to your data source (database, API, etc.)
     print('Saving recipe: $newRecipe');
 
-    // Show success and navigate back
     final isDarkMode = SharedPreferencesHelper.instance.isDarkMode;
 
     showCupertinoDialog(
@@ -447,11 +574,8 @@ class _CreateRecipeState extends State<CreateRecipe> {
             CupertinoDialogAction(
               child: const Text('OK'),
               onPressed: () {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(
-                  context,
-                  newRecipe,
-                ); // Return to previous screen with recipe data
+                Navigator.pop(context);
+                Navigator.pop(context, newRecipe);
               },
             ),
           ],
@@ -476,6 +600,36 @@ class _CreateRecipeState extends State<CreateRecipe> {
             CupertinoDialogAction(
               child: const Text('OK'),
               onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSettingsDialog(String message) {
+    final isDarkMode = SharedPreferencesHelper.instance.isDarkMode;
+
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoTheme(
+        data: CupertinoThemeData(
+          brightness: isDarkMode ? Brightness.dark : Brightness.light,
+        ),
+        child: CupertinoAlertDialog(
+          title: const Text('Permission Required'),
+          content: Text(message),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
+            ),
+            CupertinoDialogAction(
+              child: const Text('Open Settings'),
+              onPressed: () {
+                Navigator.pop(context);
+                openAppSettings();
+              },
             ),
           ],
         ),
