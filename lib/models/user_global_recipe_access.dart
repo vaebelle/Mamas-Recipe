@@ -4,16 +4,16 @@ class UserGlobalRecipeAccess {
   final String userId;
   final String gRecipeId;
   final String accessType;
-  final DateTime createdAt;
+  final DateTime createdAt;  // Note: ERD doesn't have created_at, but keeping for tracking
 
-  UserGlobalRecipeAccess ({
+  UserGlobalRecipeAccess({
     required this.userId,
     required this.gRecipeId,
     required this.accessType,
     required this.createdAt,
   });
 
-  //factory constructor to create UserGlobalRecipeAccess from Firestore document
+  // Factory constructor to create UserGlobalRecipeAccess from Firestore document
   factory UserGlobalRecipeAccess.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
@@ -36,7 +36,8 @@ class UserGlobalRecipeAccess {
           : DateTime.parse(map['created_at'] ?? DateTime.now().toIso8601String()),
     );
   }
-// Method to convert to Map for Firestore
+
+  // Method to convert to Map for Firestore
   Map<String, dynamic> toMap() {
     return {
       'user_id': userId,
@@ -46,13 +47,16 @@ class UserGlobalRecipeAccess {
     };
   }
 
-  // Access type constants
+  // Access type constants (as per ERD note: 'view, favorite, etc.')
   static const String accessTypeView = 'view';
   static const String accessTypeFavorite = 'favorite';
 
   // Helper methods
   bool get isView => accessType == accessTypeView;
   bool get isFavorite => accessType == accessTypeFavorite;
+
+  // Create composite key for Firestore document ID (since ERD shows composite primary key)
+  String get compositeKey => '${userId}_${gRecipeId}_$accessType';
 
   @override
   String toString() {
@@ -71,4 +75,3 @@ class UserGlobalRecipeAccess {
   @override
   int get hashCode => Object.hash(userId, gRecipeId, accessType);
 }
-

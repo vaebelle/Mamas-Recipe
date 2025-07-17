@@ -7,6 +7,9 @@ import 'package:mama_recipe/screens/newRecipe.dart';
 import 'package:mama_recipe/screens/settings.dart';
 import 'package:mama_recipe/screens/recipeDetails.dart';
 import 'package:mama_recipe/widgets/sharedPreference.dart';
+import 'package:mama_recipe/services/recipe_service.dart';
+import 'package:mama_recipe/services/favorites_service.dart';
+import 'package:mama_recipe/models/recipe_models.dart';
 
 final searchController = TextEditingController();
 
@@ -22,19 +25,45 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   RecipeCategory _selectedCategory = RecipeCategory.allRecipes;
-  final List<bool> _favoriteStates = [false, true, false, true, false, false];
   bool _isDarkMode = false;
+  
+  // Firebase services
+  final RecipeService _recipeService = RecipeService();
+  final FavoritesService _favoritesService = FavoritesService();
+  
+  // Data lists
+  List<Recipe> _allRecipes = [];
+  List<Recipe> _favoriteRecipes = [];
+  List<Recipe> _myRecipes = [];
+  List<Recipe> _displayedRecipes = [];
+  
+  // Loading states
+  bool _isLoading = true;
+  String _searchQuery = '';
+
+  // Cache for favorite status to avoid constant rebuilding
+  Map<String, bool> _favoriteStatusCache = {};
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadThemePreference();
+    _loadData();
+    
+    // Listen to search changes
+    searchController.addListener(() {
+      setState(() {
+        _searchQuery = searchController.text;
+        _filterRecipes();
+      });
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    searchController.removeListener(() {});
     super.dispose();
   }
 
@@ -54,6 +83,120 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      print('📊 Loading data...');
+      
+      // Load each type of data separately for better error handling
+      List<Recipe> allRecipes = [];
+      List<Recipe> favoriteRecipes = [];
+      List<Recipe> myRecipes = [];
+
+      // Load global recipes first
+      try {
+        final globalRecipes = await _recipeService.getGlobalRecipes();
+        print('✅ Loaded ${globalRecipes.length} global recipes');
+        allRecipes.addAll(globalRecipes);
+      } catch (e) {
+        print('❌ Error loading global recipes: $e');
+      }
+
+      // Load custom recipes
+      try {
+        final customRecipes = await _recipeService.getCustomRecipes();
+        print('✅ Loaded ${customRecipes.length} custom recipes');
+        allRecipes.addAll(customRecipes);
+        myRecipes = customRecipes;
+      } catch (e) {
+        print('❌ Error loading custom recipes: $e');
+      }
+
+      // Load favorites
+      try {
+        favoriteRecipes = await _favoritesService.getFavoriteRecipesWithData();
+        print('✅ Loaded ${favoriteRecipes.length} favorite recipes');
+      } catch (e) {
+        print('❌ Error loading favorites: $e');
+      }
+
+      // Load favorite status cache
+      await _loadFavoriteStatusCache(allRecipes);
+
+      // Sort all recipes by creation date
+      allRecipes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      if (mounted) {
+        setState(() {
+          _allRecipes = allRecipes;
+          _favoriteRecipes = favoriteRecipes;
+          _myRecipes = myRecipes;
+          _isLoading = false;
+          
+          print('📈 Final counts - All: ${_allRecipes.length}, Favorites: ${_favoriteRecipes.length}, My: ${_myRecipes.length}');
+          
+          _filterRecipes();
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showErrorDialog('Failed to load recipes. Please try again.');
+      }
+    }
+  }
+
+  Future<void> _loadFavoriteStatusCache(List<Recipe> recipes) async {
+    _favoriteStatusCache.clear();
+    
+    for (Recipe recipe in recipes) {
+      try {
+        final isFavorite = await _favoritesService.isRecipeFavorited(
+          recipeId: recipe.id,
+          recipeType: recipe.isGlobal ? 'global' : 'custom',
+        );
+        _favoriteStatusCache['${recipe.id}_${recipe.type.name}'] = isFavorite;
+      } catch (e) {
+        print('❌ Error loading favorite status for ${recipe.id}: $e');
+        _favoriteStatusCache['${recipe.id}_${recipe.type.name}'] = false;
+      }
+    }
+    
+    print('💾 Loaded favorite status for ${_favoriteStatusCache.length} recipes');
+  }
+
+  void _filterRecipes() {
+    List<Recipe> baseRecipes;
+    
+    switch (_selectedCategory) {
+      case RecipeCategory.allRecipes:
+        baseRecipes = _allRecipes;
+        break;
+      case RecipeCategory.favorites:
+        baseRecipes = _favoriteRecipes;
+        break;
+      case RecipeCategory.myRecipes:
+        baseRecipes = _myRecipes;
+        break;
+    }
+
+    if (_searchQuery.isEmpty) {
+      _displayedRecipes = baseRecipes;
+    } else {
+      _displayedRecipes = baseRecipes
+          .where((recipe) => recipe.containsSearchTerms(_searchQuery))
+          .toList();
+    }
+    
+    print('🔍 Filtered to ${_displayedRecipes.length} recipes for category ${_selectedCategory.name}');
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoTheme(
@@ -68,6 +211,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         child: SafeArea(
           child: CustomScrollView(
             slivers: [
+              CupertinoSliverRefreshControl(
+                onRefresh: _loadData,
+              ),
               SliverToBoxAdapter(
                 child: Column(
                   children: [
@@ -146,6 +292,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           if (value != null) {
                             setState(() {
                               _selectedCategory = value;
+                              _filterRecipes();
                             });
                           }
                         },
@@ -215,11 +362,22 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Widget _buildRecipeSliver() {
-    List<Map<String, dynamic>> recipes = _getRecipesForCategory(
-      _selectedCategory,
-    );
+    if (_isLoading) {
+      return const SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CupertinoActivityIndicator(radius: 20),
+              SizedBox(height: 16),
+              Text('Loading recipes...'),
+            ],
+          ),
+        ),
+      );
+    }
 
-    if (recipes.isEmpty) {
+    if (_displayedRecipes.isEmpty) {
       return SliverFillRemaining(
         child: Center(
           child: Column(
@@ -247,6 +405,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 ),
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 16),
+              CupertinoButton(
+                onPressed: _loadData,
+                child: const Text('Refresh'),
+              ),
             ],
           ),
         ),
@@ -255,14 +418,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     return SliverList(
       delegate: SliverChildBuilderDelegate((context, index) {
-        final recipe = recipes[index];
+        final recipe = _displayedRecipes[index];
+        final favoriteKey = '${recipe.id}_${recipe.type.name}';
+        final isFavorite = _favoriteStatusCache[favoriteKey] ?? false;
+        
         return RecipeCard(
-          imagePath: recipe['imagePath'],
-          cardName: recipe['name'],
-          ingredients: List<String>.from(recipe['ingredients']),
-          method: recipe['method'],
-          tags: List<String>.from(recipe['tags']),
-          isFavorite: _favoriteStates[recipe['id'] % _favoriteStates.length],
+          imagePath: recipe.imageUrl,
+          cardName: recipe.name,
+          ingredients: recipe.ingredientsList,
+          method: recipe.instructions,
+          tags: recipe.tagsList,
+          isFavorite: isFavorite,
           backgroundColor: _isDarkMode
               ? const Color(0xFF2C2C2E)
               : CupertinoColors.white,
@@ -298,178 +464,39 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 : CupertinoColors.systemGrey,
             fontWeight: FontWeight.w500,
           ),
-          onEdit: _selectedCategory == RecipeCategory.myRecipes
-              ? () {
-                  _handleEditRecipe(recipe['id']);
-                }
+          onEdit: recipe.isCustom && recipe.userId == _recipeService.customService.currentUserId
+              ? () => _handleEditRecipe(recipe)
               : null,
-          onDelete: _selectedCategory == RecipeCategory.myRecipes
-              ? () {
-                  _handleDeleteRecipe(recipe['id']);
-                }
+          onDelete: recipe.isCustom && recipe.userId == _recipeService.customService.currentUserId
+              ? () => _handleDeleteRecipe(recipe)
               : null,
-          onFavorite: () {
-            _handleFavoriteToggle(recipe['id']);
-          },
-          onTap: () {
-            _handleRecipeTap(recipe['id']);
-          },
+          onFavorite: () => _handleFavoriteToggle(recipe),
+          onTap: () => _handleRecipeTap(recipe),
         );
-      }, childCount: recipes.length),
+      }, childCount: _displayedRecipes.length),
     );
-  }
-
-  List<Map<String, dynamic>> _getRecipesForCategory(RecipeCategory category) {
-    // Sample recipe data - replace with your actual data source
-    final allRecipes = [
-      {
-        'id': 0,
-        'name': 'Creamy Garlic Pasta',
-        'ingredients': [
-          '1 lb pasta',
-          '4 cloves garlic, minced',
-          '1 cup heavy cream',
-          '1/2 cup parmesan cheese',
-          '2 tbsp olive oil',
-          'Salt and pepper to taste',
-        ],
-        'method':
-            'Cook pasta according to package directions. Heat olive oil in large pan, sauté garlic until fragrant. Add cream and bring to simmer. Toss with pasta and parmesan cheese. Season with salt and pepper.',
-        'imagePath': 'assets/images/pasta.jpg',
-        'tags': ['italian', 'pasta', 'quick'],
-        'isFavorite': false,
-        'isMyRecipe': false,
-      },
-      {
-        'id': 1,
-        'name': 'Classic Chocolate Chip Cookies',
-        'ingredients': [
-          '2 cups flour',
-          '1 cup butter',
-          '1/2 cup brown sugar',
-          '1/2 cup white sugar',
-          '2 large eggs',
-          '2 tsp vanilla extract',
-          '1 tsp baking soda',
-          '2 cups chocolate chips',
-        ],
-        'method':
-            'Preheat oven to 375°F. Mix dry ingredients. Cream butter and sugars. Add eggs and vanilla. Combine wet and dry ingredients. Fold in chocolate chips. Drop spoonfuls on baking sheet. Bake for 9-11 minutes.',
-        'imagePath': 'assets/images/cookies.jpg',
-        'tags': ['dessert', 'cookies', 'chocolate'],
-        'isFavorite': true,
-        'isMyRecipe': false,
-      },
-      {
-        'id': 2,
-        'name': 'Grilled Chicken Salad',
-        'ingredients': [
-          '2 chicken breasts',
-          '4 cups mixed greens',
-          '1 cucumber, diced',
-          '1 cup cherry tomatoes',
-          '1/4 red onion, sliced',
-          '2 tbsp olive oil',
-          '1 tbsp balsamic vinegar',
-        ],
-        'method':
-            'Season and grill chicken breasts until cooked through. Let rest, then slice. Combine greens, cucumber, tomatoes, and onion. Whisk olive oil and balsamic vinegar. Top salad with sliced chicken and dressing.',
-        'imagePath': 'assets/images/salad.jpg',
-        'tags': ['healthy', 'protein', 'salad'],
-        'isFavorite': false,
-        'isMyRecipe': false,
-      },
-      {
-        'id': 3,
-        'name': 'Mom\'s Special Adobo',
-        'ingredients': [
-          '2 lbs pork shoulder, cubed',
-          '1/2 cup soy sauce',
-          '1/4 cup vinegar',
-          '6 cloves garlic, crushed',
-          '2 bay leaves',
-          '1 tsp peppercorns',
-          '1 tbsp sugar',
-        ],
-        'method':
-            'Marinate pork in soy sauce and vinegar for 30 minutes. In pot, combine all ingredients and bring to boil. Reduce heat and simmer covered for 45 minutes. Remove cover and cook until sauce thickens.',
-        'imagePath': 'assets/images/adobo.jpg',
-        'tags': ['filipino', 'traditional', 'family recipe'],
-        'isFavorite': true,
-        'isMyRecipe': true,
-      },
-      {
-        'id': 4,
-        'name': 'Homemade Pizza',
-        'ingredients': [
-          '2 cups flour',
-          '1 tsp active dry yeast',
-          '3/4 cup warm water',
-          '1 tsp salt',
-          '2 tbsp olive oil',
-          '1/2 cup pizza sauce',
-          '2 cups mozzarella cheese',
-        ],
-        'method':
-            'Mix yeast with warm water. Combine flour and salt, add yeast mixture and olive oil. Knead until smooth. Let rise 1 hour. Roll out dough, add sauce and cheese. Bake at 475°F for 12-15 minutes.',
-        'imagePath': 'assets/images/pizza.jpg',
-        'tags': ['italian', 'pizza', 'homemade'],
-        'isFavorite': false,
-        'isMyRecipe': true,
-      },
-      {
-        'id': 5,
-        'name': 'Banana Bread',
-        'ingredients': [
-          '3 ripe bananas, mashed',
-          '1/3 cup melted butter',
-          '3/4 cup sugar',
-          '1 egg, beaten',
-          '1 tsp vanilla',
-          '1 tsp baking soda',
-          '1 1/2 cups flour',
-        ],
-        'method':
-            'Preheat oven to 350°F. Mix mashed bananas with melted butter. Add sugar, egg, and vanilla. Mix in baking soda and flour until just combined. Pour into greased loaf pan. Bake 60-65 minutes.',
-        'imagePath': 'assets/images/banana_bread.jpg',
-        'tags': ['baking', 'breakfast', 'sweet'],
-        'isFavorite': false,
-        'isMyRecipe': false,
-      },
-    ];
-
-    switch (category) {
-      case RecipeCategory.allRecipes:
-        return allRecipes;
-      case RecipeCategory.favorites:
-        return allRecipes
-            .where((recipe) => recipe['isFavorite'] == true)
-            .toList();
-      case RecipeCategory.myRecipes:
-        return allRecipes
-            .where((recipe) => recipe['isMyRecipe'] == true)
-            .toList();
-    }
   }
 
   String _getEmptyStateMessage(RecipeCategory category) {
     switch (category) {
       case RecipeCategory.allRecipes:
-        return 'No recipes found.\nTry searching for something else.';
+        return _searchQuery.isNotEmpty 
+            ? 'No recipes found for "$_searchQuery".\nTry a different search term.'
+            : 'No recipes available.\nCheck your internet connection and try refreshing.';
       case RecipeCategory.favorites:
-        return 'No favorite recipes yet.\nStart adding some favorites!';
+        return 'No favorite recipes yet.\nStart adding some favorites by tapping the heart icon!';
       case RecipeCategory.myRecipes:
         return 'You haven\'t created any recipes yet.\nTap the + button to create your first recipe!';
     }
   }
 
-  void _handleEditRecipe(int recipeId) {
+  Future<void> _handleEditRecipe(Recipe recipe) async {
     // Navigate to edit recipe screen
-    print('Edit recipe with ID: $recipeId');
-    // Navigator.push(context, CupertinoPageRoute(builder: (context) => EditRecipeScreen(recipeId: recipeId)));
+    print('Edit recipe: ${recipe.name}');
+    // TODO: Implement edit functionality
   }
 
-  void _handleDeleteRecipe(int recipeId) {
+  Future<void> _handleDeleteRecipe(Recipe recipe) async {
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoTheme(
@@ -478,8 +505,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         ),
         child: CupertinoAlertDialog(
           title: const Text('Delete Recipe'),
-          content: const Text(
-            'Are you sure you want to delete this recipe? This action cannot be undone.',
+          content: Text(
+            'Are you sure you want to delete "${recipe.name}"? This action cannot be undone.',
           ),
           actions: [
             CupertinoDialogAction(
@@ -489,10 +516,20 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             CupertinoDialogAction(
               isDestructiveAction: true,
               child: const Text('Delete'),
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
-                print('Delete recipe with ID: $recipeId');
-                // Implement delete logic here
+                
+                final success = await _recipeService.customService.deleteCustomRecipe(recipe.id);
+                if (success) {
+                  await _loadData(); // Refresh data
+                  if (mounted) {
+                    _showSuccessDialog('Recipe deleted successfully');
+                  }
+                } else {
+                  if (mounted) {
+                    _showErrorDialog('Failed to delete recipe. Please try again.');
+                  }
+                }
               },
             ),
           ],
@@ -501,31 +538,74 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
-  void _handleFavoriteToggle(int recipeId) {
+  Future<void> _handleFavoriteToggle(Recipe recipe) async {
+    print('🔄 Toggling favorite for: ${recipe.name}');
+    
+    // Show immediate feedback
+    final favoriteKey = '${recipe.id}_${recipe.type.name}';
+    final currentStatus = _favoriteStatusCache[favoriteKey] ?? false;
+    
+    // Optimistic update
     setState(() {
-      int index = recipeId % _favoriteStates.length;
-      _favoriteStates[index] = !_favoriteStates[index];
+      _favoriteStatusCache[favoriteKey] = !currentStatus;
     });
-    print('Toggle favorite for recipe ID: $recipeId');
+
+    try {
+      final success = await _recipeService.toggleRecipeFavorite(recipe);
+      
+      if (success) {
+        print('✅ Favorite toggle successful');
+        // Refresh data to get updated favorites list
+        await _loadData();
+      } else {
+        print('❌ Favorite toggle failed');
+        // Revert optimistic update
+        setState(() {
+          _favoriteStatusCache[favoriteKey] = currentStatus;
+        });
+        _showErrorDialog('Failed to update favorite status');
+      }
+    } catch (e) {
+      print('❌ Error toggling favorite: $e');
+      // Revert optimistic update
+      setState(() {
+        _favoriteStatusCache[favoriteKey] = currentStatus;
+      });
+      _showErrorDialog('Failed to update favorite status');
+    }
   }
 
-  void _handleRecipeTap(int recipeId) {
-    // Find the recipe data
-    final allRecipes = _getRecipesForCategory(RecipeCategory.allRecipes);
-    try {
-      final recipe = allRecipes.firstWhere((r) => r['id'] == recipeId);
+  Future<void> _handleRecipeTap(Recipe recipe) async {
+    // Record view for analytics
+    await _recipeService.recordRecipeView(recipe);
+    
+    // Convert Recipe to Map for RecipeDetailsScreen
+    final favoriteKey = '${recipe.id}_${recipe.type.name}';
+    final isFavorite = _favoriteStatusCache[favoriteKey] ?? false;
+    
+    final recipeMap = {
+      'id': recipe.id,
+      'name': recipe.name,
+      'ingredients': recipe.ingredientsList,
+      'method': recipe.instructions,
+      'tags': recipe.tagsList,
+      'imagePath': recipe.imageUrl,
+      'isFavorite': isFavorite,
+      'isMyRecipe': recipe.isCustom,
+    };
 
-      Navigator.push(
-        context,
-        CupertinoPageRoute(
-          builder: (context) =>
-              RecipeDetailsScreen(recipe: recipe, isDarkMode: _isDarkMode),
+    Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (context) => RecipeDetailsScreen(
+          recipe: recipeMap,
+          isDarkMode: _isDarkMode,
         ),
-      );
-    } catch (e) {
-      // Recipe not found, handle error gracefully
-      print('Recipe with ID $recipeId not found');
-    }
+      ),
+    ).then((_) {
+      // Refresh data when returning from recipe details
+      _loadData();
+    });
   }
 
   String _getCategoryDisplayName(RecipeCategory category) {
@@ -539,7 +619,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
-  void _handleAddRecipe() async {
+  Future<void> _handleAddRecipe() async {
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
       CupertinoPageRoute(
@@ -548,18 +628,56 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       ),
     );
 
-    if (result != null) {
-      // Handle the new recipe data
-      print('New recipe created: $result');
-      // TODO: Add the new recipe to your data source
-      // You might want to refresh the recipe list here
-      setState(() {
-        // Refresh the UI if needed
-      });
+    // Reload data when returning from create recipe
+    if (result != null && result['success'] == true) {
+      print('✅ Recipe created, refreshing data...');
+      await _loadData();
     }
 
     // Reload theme when returning from any navigation
     await _loadThemePreference();
+  }
+
+  void _showSuccessDialog(String message) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoTheme(
+        data: CupertinoThemeData(
+          brightness: _isDarkMode ? Brightness.dark : Brightness.light,
+        ),
+        child: CupertinoAlertDialog(
+          title: const Text('Success'),
+          content: Text(message),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoTheme(
+        data: CupertinoThemeData(
+          brightness: _isDarkMode ? Brightness.dark : Brightness.light,
+        ),
+        child: CupertinoAlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   CupertinoNavigationBar navigationBar() {
@@ -579,8 +697,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             context,
             CupertinoPageRoute(builder: (context) => const Settings()),
           );
-          // Reload theme when returning from Settings
+          // Reload theme and data when returning from Settings
           await _loadThemePreference();
+          await _loadData();
         },
         child: const Icon(
           CupertinoIcons.bars,

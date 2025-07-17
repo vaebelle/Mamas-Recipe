@@ -3,8 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Favorites {
   final String favoriteId;
   final String userId;
-  final String recipeType;
-  final String recipeId;
+  final String recipeType;  // 'global' or 'custom' as per ERD
+  final String recipeId;    // references gRecipe_id or cRecipe_id as per ERD
   final DateTime createdAt;
 
   Favorites({
@@ -49,7 +49,7 @@ class Favorites {
     };
   }
 
-  // Recipe type constants
+  // Recipe type constants (as per ERD note: 'global or custom')
   static const String recipeTypeGlobal = 'global';
   static const String recipeTypeCustom = 'custom';
 

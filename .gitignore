@@ -46,3 +46,5 @@ app.*.map.json
 
 #others
 lib/models/notes.md
+
+lib/firebase_options.dart

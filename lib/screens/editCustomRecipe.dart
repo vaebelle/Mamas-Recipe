@@ -1,21 +1,24 @@
 import 'package:flutter/cupertino.dart';
-import 'package:mama_recipe/widgets/textfield.dart';
-import 'package:mama_recipe/widgets/button.dart';
 import 'package:mama_recipe/widgets/sharedPreference.dart';
 import 'package:mama_recipe/services/custom_recipes_service.dart';
+import 'package:mama_recipe/models/custom_recipes.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 
-class CreateRecipe extends StatefulWidget {
-  const CreateRecipe({super.key});
+class EditCustomRecipe extends StatefulWidget {
+  final CustomRecipes recipe;
+
+  const EditCustomRecipe({
+    super.key,
+    required this.recipe,
+  });
 
   @override
-  State<CreateRecipe> createState() => _CreateRecipeState();
+  State<EditCustomRecipe> createState() => _EditCustomRecipeState();
 }
 
-class _CreateRecipeState extends State<CreateRecipe> {
+class _EditCustomRecipeState extends State<EditCustomRecipe> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _ingredientsController = TextEditingController();
   final TextEditingController _methodController = TextEditingController();
@@ -26,6 +29,34 @@ class _CreateRecipeState extends State<CreateRecipe> {
   final CustomRecipesService _customRecipesService = CustomRecipesService();
   
   bool _isLoading = false;
+  bool _hasChanges = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecipeData();
+    
+    // Add listeners to detect changes
+    _titleController.addListener(_onDataChanged);
+    _ingredientsController.addListener(_onDataChanged);
+    _methodController.addListener(_onDataChanged);
+    _tagsController.addListener(_onDataChanged);
+  }
+
+  void _loadRecipeData() {
+    _titleController.text = widget.recipe.cRecipeName;
+    _ingredientsController.text = widget.recipe.cRecipeIngredients;
+    _methodController.text = widget.recipe.cRecipeInstructions;
+    _tagsController.text = widget.recipe.tags;
+  }
+
+  void _onDataChanged() {
+    if (!_hasChanges) {
+      setState(() {
+        _hasChanges = true;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -55,34 +86,52 @@ class _CreateRecipeState extends State<CreateRecipe> {
           border: null,
           leading: CupertinoButton(
             padding: EdgeInsets.zero,
-            onPressed: _isLoading ? null : () => Navigator.pop(context),
-            child: Icon(
-              CupertinoIcons.xmark,
-              color: _isLoading 
-                  ? CupertinoColors.systemGrey
-                  : (isDarkMode
-                      ? const Color(0xFFAEAEB2)
-                      : CupertinoColors.systemGrey),
-              size: 24,
+            onPressed: _isLoading ? null : _handleCancel,
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: _isLoading 
+                    ? CupertinoColors.systemGrey
+                    : CupertinoColors.systemBlue,
+                fontSize: 17,
+              ),
             ),
           ),
-          middle: Text(
-            'Create New Recipe',
-            style: TextStyle(
-              color: isDarkMode ? CupertinoColors.white : CupertinoColors.black,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+          middle: Column(
+            children: [
+              Text(
+                'Edit Recipe',
+                style: TextStyle(
+                  color: isDarkMode ? CupertinoColors.white : CupertinoColors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                'Update your recipe details',
+                style: TextStyle(
+                  color: isDarkMode
+                      ? const Color(0xFFAEAEB2)
+                      : CupertinoColors.systemGrey,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
           trailing: _isLoading
               ? const CupertinoActivityIndicator()
               : CupertinoButton(
                   padding: EdgeInsets.zero,
-                  onPressed: _saveRecipe,
-                  child: const Icon(
-                    CupertinoIcons.checkmark,
-                    color: CupertinoColors.systemBlue,
-                    size: 24,
+                  onPressed: _hasChanges ? _updateRecipe : null,
+                  child: Text(
+                    'Update Recipe',
+                    style: TextStyle(
+                      color: _hasChanges 
+                          ? CupertinoColors.systemOrange
+                          : CupertinoColors.systemGrey,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
         ),
@@ -92,20 +141,6 @@ class _CreateRecipeState extends State<CreateRecipe> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 16),
-                // Subtitle
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Text(
-                    'Add a new recipe to your collection',
-                    style: TextStyle(
-                      color: isDarkMode
-                          ? const Color(0xFFAEAEB2)
-                          : CupertinoColors.systemGrey,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
 
                 // Recipe Title
                 _buildSectionLabel('Recipe Title'),
@@ -146,7 +181,11 @@ class _CreateRecipeState extends State<CreateRecipe> {
                 const SizedBox(height: 24),
 
                 // Recipe Image
-                _buildSectionLabel('Recipe Image (Optional)'),
+                _buildSectionLabel('Recipe Image'),
+                const SizedBox(height: 12),
+
+                // Show current image or placeholder
+                _buildCurrentImageSection(),
                 const SizedBox(height: 12),
 
                 // Show selected image if available
@@ -158,7 +197,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
                 _buildImageSelector(),
                 const SizedBox(height: 40),
 
-                // Save Button
+                // Update Button
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
                   child: SizedBox(
@@ -166,9 +205,9 @@ class _CreateRecipeState extends State<CreateRecipe> {
                     child: CupertinoButton(
                       color: _isLoading 
                           ? CupertinoColors.systemGrey
-                          : CupertinoColors.systemOrange,
+                          : (_hasChanges ? CupertinoColors.systemOrange : CupertinoColors.systemGrey),
                       borderRadius: BorderRadius.circular(12),
-                      onPressed: _isLoading ? null : _saveRecipe,
+                      onPressed: (_isLoading || !_hasChanges) ? null : _updateRecipe,
                       child: _isLoading
                           ? const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -176,7 +215,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
                                 CupertinoActivityIndicator(),
                                 SizedBox(width: 12),
                                 Text(
-                                  'Creating Recipe...',
+                                  'Updating Recipe...',
                                   style: TextStyle(
                                     color: CupertinoColors.white,
                                     fontSize: 16,
@@ -185,9 +224,9 @@ class _CreateRecipeState extends State<CreateRecipe> {
                                 ),
                               ],
                             )
-                          : const Text(
-                              'Save Recipe',
-                              style: TextStyle(
+                          : Text(
+                              _hasChanges ? 'Update Recipe' : 'No Changes Made',
+                              style: const TextStyle(
                                 color: CupertinoColors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -200,6 +239,61 @@ class _CreateRecipeState extends State<CreateRecipe> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentImageSection() {
+    final isDarkMode = SharedPreferencesHelper.instance.isDarkMode;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+      child: Container(
+        width: double.infinity,
+        height: 120,
+        decoration: BoxDecoration(
+          color: isDarkMode
+              ? const Color(0xFF2C2C2E)
+              : CupertinoColors.systemGrey6,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDarkMode
+                ? const Color(0xFF38383A)
+                : CupertinoColors.systemGrey4,
+            width: 1.0,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              CupertinoIcons.photo,
+              size: 32,
+              color: isDarkMode
+                  ? const Color(0xFFAEAEB2)
+                  : CupertinoColors.systemGrey,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Current Recipe Image',
+              style: TextStyle(
+                fontSize: 12,
+                color: isDarkMode
+                    ? const Color(0xFFAEAEB2)
+                    : CupertinoColors.systemGrey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            if (widget.recipe.cRecipeImage.isNotEmpty)
+              Text(
+                'Image URL available',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: CupertinoColors.systemGreen,
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -243,6 +337,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
                 onTap: () {
                   setState(() {
                     _selectedImage = null;
+                    _onDataChanged();
                   });
                 },
                 child: Container(
@@ -255,6 +350,25 @@ class _CreateRecipeState extends State<CreateRecipe> {
                     CupertinoIcons.xmark,
                     color: CupertinoColors.white,
                     size: 16,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 8,
+              left: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGreen.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'New Image Selected',
+                  style: TextStyle(
+                    color: CupertinoColors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -454,7 +568,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
           setState(() {
             _selectedImage = File(image.path);
           });
-          _showImageSelectedDialog('Camera');
+          _onDataChanged();
         }
       } else if (cameraStatus.isDenied) {
         _showErrorDialog('Camera permission was denied. Please try again.');
@@ -494,7 +608,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
           setState(() {
             _selectedImage = File(image.path);
           });
-          _showImageSelectedDialog('Gallery');
+          _onDataChanged();
         }
       } else if (galleryStatus.isDenied) {
         _showErrorDialog('Photo access was denied. Please try again.');
@@ -509,7 +623,15 @@ class _CreateRecipeState extends State<CreateRecipe> {
     }
   }
 
-  void _showImageSelectedDialog(String source) {
+  void _handleCancel() {
+    if (_hasChanges) {
+      _showDiscardChangesDialog();
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
+  void _showDiscardChangesDialog() {
     final isDarkMode = SharedPreferencesHelper.instance.isDarkMode;
 
     showCupertinoDialog(
@@ -519,12 +641,22 @@ class _CreateRecipeState extends State<CreateRecipe> {
           brightness: isDarkMode ? Brightness.dark : Brightness.light,
         ),
         child: CupertinoAlertDialog(
-          title: const Text('Image Selected'),
-          content: Text('Image selected from $source successfully!'),
+          title: const Text('Discard Changes'),
+          content: const Text(
+            'You have unsaved changes. Are you sure you want to discard them?',
+          ),
           actions: [
             CupertinoDialogAction(
-              child: const Text('OK'),
+              child: const Text('Keep Editing'),
               onPressed: () => Navigator.pop(context),
+            ),
+            CupertinoDialogAction(
+              isDestructiveAction: true,
+              child: const Text('Discard'),
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Close edit screen
+              },
             ),
           ],
         ),
@@ -532,7 +664,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
     );
   }
 
-  Future<void> _saveRecipe() async {
+  Future<void> _updateRecipe() async {
     // Validate form
     if (_titleController.text.trim().isEmpty) {
       _showErrorDialog('Please enter a recipe title');
@@ -571,7 +703,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
           .where((e) => e.isNotEmpty)
           .join(',');
 
-      // TODO: Upload image to Firebase Storage if selected
+      // TODO: Upload new image to Firebase Storage if selected
       String? imageUrl;
       if (_selectedImage != null) {
         // For now, we'll leave this empty
@@ -579,17 +711,18 @@ class _CreateRecipeState extends State<CreateRecipe> {
         imageUrl = '';
       }
 
-      // Create recipe using Firebase service
-      final recipeId = await _customRecipesService.createCustomRecipe(
+      // Update recipe using Firebase service
+      final success = await _customRecipesService.updateCustomRecipe(
+        recipeId: widget.recipe.cRecipeId,
         recipeName: _titleController.text.trim(),
         ingredients: ingredients,
         instructions: instructions,
         tags: tags,
-        imageUrl: imageUrl,
+        imageUrl: imageUrl, // Only update if new image selected
       );
 
-      if (recipeId != null) {
-        // Success - show dialog and return data
+      if (success) {
+        // Success - show dialog and return
         final isDarkMode = SharedPreferencesHelper.instance.isDarkMode;
         
         showCupertinoDialog(
@@ -599,17 +732,14 @@ class _CreateRecipeState extends State<CreateRecipe> {
               brightness: isDarkMode ? Brightness.dark : Brightness.light,
             ),
             child: CupertinoAlertDialog(
-              title: const Text('Recipe Saved'),
-              content: const Text('Your recipe has been saved successfully!'),
+              title: const Text('Recipe Updated'),
+              content: const Text('Your recipe has been updated successfully!'),
               actions: [
                 CupertinoDialogAction(
                   child: const Text('OK'),
                   onPressed: () {
                     Navigator.pop(context); // Close dialog
-                    Navigator.pop(context, {
-                      'success': true,
-                      'recipeId': recipeId,
-                    }); // Return success flag only, don't return recipe data
+                    Navigator.pop(context, true); // Return to previous screen with success flag
                   },
                 ),
               ],
@@ -617,11 +747,11 @@ class _CreateRecipeState extends State<CreateRecipe> {
           ),
         );
       } else {
-        throw Exception('Failed to create recipe');
+        throw Exception('Failed to update recipe');
       }
     } catch (e) {
-      print('Error saving recipe: $e');
-      _showErrorDialog('Failed to save recipe. Please try again.');
+      print('Error updating recipe: $e');
+      _showErrorDialog('Failed to update recipe. Please try again.');
     } finally {
       if (mounted) {
         setState(() {
@@ -673,9 +803,9 @@ class _CreateRecipeState extends State<CreateRecipe> {
             ),
             CupertinoDialogAction(
               child: const Text('Open Settings'),
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
-                openAppSettings();
+                await openAppSettings();
               },
             ),
           ],

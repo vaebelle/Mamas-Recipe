@@ -9,7 +9,7 @@ class Recipe {
   final String name;
   final String ingredients;
   final String instructions;
-  final String imageUrl;
+  final String imageUrl;  // Updated to match ERD field naming
   final String tags;
   final RecipeType type;
   final DateTime createdAt;
@@ -36,7 +36,7 @@ class Recipe {
       name: global.gRecipeName,
       ingredients: global.gRecipeIngredients,
       instructions: global.gRecipeInstructions,
-      imageUrl: global.gRecipeImageUrl,
+      imageUrl: global.gRecipeImage,  // Updated field name
       tags: global.tags,
       type: RecipeType.global,
       createdAt: global.createdAt,
