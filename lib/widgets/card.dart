@@ -199,7 +199,62 @@ class RecipeCard extends StatelessWidget {
   }
 
   Widget _buildImage() {
-    // Always show placeholder as in the design
+    return Container(
+      height: imageHeight,
+      width: double.infinity,
+      child: ClipRRect(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(borderRadius),
+          topRight: Radius.circular(borderRadius),
+        ),
+        child: imagePath.isNotEmpty ? _buildActualImage() : _buildPlaceholderImage(),
+      ),
+    );
+  }
+
+  Widget _buildActualImage() {
+    // Check if it's a network URL (Supabase) or local asset
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      // Network image (Supabase URL)
+      return Image.network(
+        imagePath,
+        fit: BoxFit.cover,
+        height: imageHeight,
+        width: double.infinity,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return _buildLoadingPlaceholder();
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return _buildPlaceholderImage();
+        },
+      );
+    } else {
+      // Local asset image
+      return Image.asset(
+        imagePath,
+        fit: BoxFit.cover,
+        height: imageHeight,
+        width: double.infinity,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildPlaceholderImage();
+        },
+      );
+    }
+  }
+
+  Widget _buildLoadingPlaceholder() {
+    return Container(
+      height: imageHeight,
+      width: double.infinity,
+      color: CupertinoColors.systemGrey5,
+      child: const Center(
+        child: CupertinoActivityIndicator(),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderImage() {
     return Container(
       height: imageHeight,
       width: double.infinity,

@@ -36,18 +36,6 @@ class _AuthenticationState extends State<Authentication> {
       child: StreamBuilder<User?>(
         stream: authService.value.authStateChanges,
         builder: (context, snapshot) {
-          // Show loading screen only on initial load
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CupertinoPageScaffold(
-              backgroundColor: _isDarkMode
-                  ? const Color(0xFF1C1C1E)
-                  : CupertinoColors.white,
-              child: const Center(
-                child: CupertinoActivityIndicator(radius: 15),
-              ),
-            );
-          }
-
           // Check for errors
           if (snapshot.hasError) {
             return CupertinoPageScaffold(

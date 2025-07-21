@@ -1,12 +1,7 @@
 import 'package:flutter/cupertino.dart';
-import 'package:mama_recipe/widgets/textfield.dart';
-import 'package:mama_recipe/widgets/button.dart';
 import 'package:mama_recipe/widgets/sharedPreference.dart';
 import 'package:mama_recipe/services/custom_recipes_service.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'dart:io';
+import 'package:mama_recipe/widgets/recipe_image_picker.dart';
 
 class CreateRecipe extends StatefulWidget {
   const CreateRecipe({super.key});
@@ -21,8 +16,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
   final TextEditingController _methodController = TextEditingController();
   final TextEditingController _tagsController = TextEditingController();
 
-  File? _selectedImage;
-  final ImagePicker _picker = ImagePicker();
+  String? _selectedImageUrl; // Changed from _selectedImagePath to _selectedImageUrl
   final CustomRecipesService _customRecipesService = CustomRecipesService();
   
   bool _isLoading = false;
@@ -74,17 +68,17 @@ class _CreateRecipeState extends State<CreateRecipe> {
               fontWeight: FontWeight.w600,
             ),
           ),
-          trailing: _isLoading
-              ? const CupertinoActivityIndicator()
-              : CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: _saveRecipe,
-                  child: const Icon(
-                    CupertinoIcons.checkmark,
-                    color: CupertinoColors.systemBlue,
-                    size: 24,
-                  ),
-                ),
+          trailing: CupertinoButton(
+            padding: EdgeInsets.zero,
+            onPressed: _isLoading ? null : _saveRecipe,
+            child: Icon(
+              CupertinoIcons.checkmark,
+              color: _isLoading 
+                  ? CupertinoColors.systemGrey
+                  : CupertinoColors.systemBlue,
+              size: 24,
+            ),
+          ),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -146,16 +140,18 @@ class _CreateRecipeState extends State<CreateRecipe> {
                 const SizedBox(height: 24),
 
                 // Recipe Image
-                _buildSectionLabel('Recipe Image (Optional)'),
-                const SizedBox(height: 12),
-
-                // Show selected image if available
-                if (_selectedImage != null) ...[
-                  _buildSelectedImagePreview(),
-                  const SizedBox(height: 12),
-                ],
-
-                _buildImageSelector(),
+                const SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                  child: RecipeImagePicker(
+                    onImageChanged: (imageUrl) {
+                      setState(() {
+                        _selectedImageUrl = imageUrl;
+                      });
+                    },
+                    isDarkMode: isDarkMode,
+                  ),
+                ),
                 const SizedBox(height: 40),
 
                 // Save Button
@@ -200,66 +196,6 @@ class _CreateRecipeState extends State<CreateRecipe> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSelectedImagePreview() {
-    final isDarkMode = SharedPreferencesHelper.instance.isDarkMode;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25.0),
-      child: Container(
-        width: double.infinity,
-        height: 200,
-        decoration: BoxDecoration(
-          color: isDarkMode
-              ? const Color(0xFF2C2C2E)
-              : CupertinoColors.systemGrey6,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDarkMode
-                ? const Color(0xFF38383A)
-                : CupertinoColors.systemGrey4,
-            width: 1.0,
-          ),
-        ),
-        child: Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(11),
-              child: Image.file(
-                _selectedImage!,
-                width: double.infinity,
-                height: 200,
-                fit: BoxFit.cover,
-              ),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedImage = null;
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: CupertinoColors.systemRed.withOpacity(0.8),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    CupertinoIcons.xmark,
-                    color: CupertinoColors.white,
-                    size: 16,
-                  ),
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -364,174 +300,6 @@ class _CreateRecipeState extends State<CreateRecipe> {
     );
   }
 
-  Widget _buildImageSelector() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildImageOption(
-              icon: CupertinoIcons.camera,
-              label: 'Camera',
-              onTap: _selectFromCamera,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildImageOption(
-              icon: CupertinoIcons.photo,
-              label: 'Gallery',
-              onTap: _selectFromGallery,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildImageOption({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    final isDarkMode = SharedPreferencesHelper.instance.isDarkMode;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-        decoration: BoxDecoration(
-          color: isDarkMode
-              ? const Color(0xFF2C2C2E)
-              : CupertinoColors.systemGrey6,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDarkMode
-                ? const Color(0xFF38383A)
-                : CupertinoColors.systemGrey4,
-            width: 1.0,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: isDarkMode
-                  ? const Color(0xFFAEAEB2)
-                  : CupertinoColors.systemGrey,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                color: isDarkMode
-                    ? const Color(0xFFAEAEB2)
-                    : CupertinoColors.systemGrey,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _selectFromCamera() async {
-    try {
-      final cameraStatus = await Permission.camera.request();
-
-      if (cameraStatus.isGranted) {
-        final XFile? image = await _picker.pickImage(
-          source: ImageSource.camera,
-          maxWidth: 1920,
-          maxHeight: 1080,
-          imageQuality: 85,
-        );
-
-        if (image != null) {
-          setState(() {
-            _selectedImage = File(image.path);
-          });
-          _showImageSelectedDialog('Camera');
-        }
-      } else if (cameraStatus.isDenied) {
-        _showErrorDialog('Camera permission was denied. Please try again.');
-      } else if (cameraStatus.isPermanentlyDenied) {
-        _showSettingsDialog(
-          'Camera access is permanently denied. Please enable it in Settings.',
-        );
-      }
-    } catch (e) {
-      print('Camera error: $e');
-      _showErrorDialog('Failed to access camera: ${e.toString()}');
-    }
-  }
-
-  Future<void> _selectFromGallery() async {
-    try {
-      PermissionStatus galleryStatus;
-
-      if (Platform.isAndroid) {
-        galleryStatus = await Permission.photos.request();
-        if (galleryStatus.isDenied) {
-          galleryStatus = await Permission.storage.request();
-        }
-      } else {
-        galleryStatus = await Permission.photos.request();
-      }
-
-      if (galleryStatus.isGranted) {
-        final XFile? image = await _picker.pickImage(
-          source: ImageSource.gallery,
-          maxWidth: 1920,
-          maxHeight: 1080,
-          imageQuality: 85,
-        );
-
-        if (image != null) {
-          setState(() {
-            _selectedImage = File(image.path);
-          });
-          _showImageSelectedDialog('Gallery');
-        }
-      } else if (galleryStatus.isDenied) {
-        _showErrorDialog('Photo access was denied. Please try again.');
-      } else if (galleryStatus.isPermanentlyDenied) {
-        _showSettingsDialog(
-          'Photo access is permanently denied. Please enable it in Settings.',
-        );
-      }
-    } catch (e) {
-      print('Gallery error: $e');
-      _showErrorDialog('Failed to access gallery: ${e.toString()}');
-    }
-  }
-
-  void _showImageSelectedDialog(String source) {
-    final isDarkMode = SharedPreferencesHelper.instance.isDarkMode;
-
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoTheme(
-        data: CupertinoThemeData(
-          brightness: isDarkMode ? Brightness.dark : Brightness.light,
-        ),
-        child: CupertinoAlertDialog(
-          title: const Text('Image Selected'),
-          content: Text('Image selected from $source successfully!'),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text('OK'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _saveRecipe() async {
     // Validate form
     if (_titleController.text.trim().isEmpty) {
@@ -571,13 +339,8 @@ class _CreateRecipeState extends State<CreateRecipe> {
           .where((e) => e.isNotEmpty)
           .join(',');
 
-      // TODO: Upload image to Firebase Storage if selected
-      String? imageUrl;
-      if (_selectedImage != null) {
-        // For now, we'll leave this empty
-        // You can implement Firebase Storage upload here
-        imageUrl = '';
-      }
+      // Use image URL directly from RecipeImagePicker (it handles Supabase upload)
+      String? imageUrl = _selectedImageUrl;
 
       // Create recipe using Firebase service
       final recipeId = await _customRecipesService.createCustomRecipe(
@@ -647,36 +410,6 @@ class _CreateRecipeState extends State<CreateRecipe> {
             CupertinoDialogAction(
               child: const Text('OK'),
               onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showSettingsDialog(String message) {
-    final isDarkMode = SharedPreferencesHelper.instance.isDarkMode;
-
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoTheme(
-        data: CupertinoThemeData(
-          brightness: isDarkMode ? Brightness.dark : Brightness.light,
-        ),
-        child: CupertinoAlertDialog(
-          title: const Text('Permission Required'),
-          content: Text(message),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text('Cancel'),
-              onPressed: () => Navigator.pop(context),
-            ),
-            CupertinoDialogAction(
-              child: const Text('Open Settings'),
-              onPressed: () {
-                Navigator.pop(context);
-                openAppSettings();
-              },
             ),
           ],
         ),

@@ -8,11 +8,20 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:mama_recipe/widgets/sharedPreference.dart';
 import 'package:mama_recipe/screens/authentication.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:mama_recipe/config/supabase_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize Supabase
+  await Supabase.initialize(
+    url: SupabaseConfig.supabaseUrl,
+    anonKey: SupabaseConfig.supabaseAnonKey,
+  );
 
   await SharedPreferencesHelper.instance.init();
 
