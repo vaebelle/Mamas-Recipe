@@ -201,12 +201,10 @@ class _LoginState extends State<Login> {
                 children: [
                   const SizedBox(height: 10),
 
-                  Icon(
-                    CupertinoIcons.lock_fill,
-                    size: 50,
-                    color: isDarkMode
-                        ? const Color(0xFFAEAEB2)
-                        : CupertinoColors.systemGrey,
+                  Image.asset(
+                    'assets/icons/mama_recipe_icon.png',
+                    width: 70,
+                    height: 70,
                   ),
                   const SizedBox(height: 20),
 
@@ -215,9 +213,10 @@ class _LoginState extends State<Login> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: isDarkMode
-                          ? CupertinoColors.white
-                          : CupertinoColors.black,
+                      // color: isDarkMode
+                      //     ? CupertinoColors.white
+                      //     : CupertinoColors.black,
+                      color: CupertinoColors.systemOrange,
                     ),
                   ),
 
@@ -254,6 +253,7 @@ class _LoginState extends State<Login> {
                   Button(
                     onTap: isLoading ? null : signIn,
                     text: isLoading ? "Loading..." : "Login",
+                    color: CupertinoColors.systemOrange,
                   ),
 
                   const SizedBox(height: 20),
@@ -337,7 +337,7 @@ class _LoginState extends State<Login> {
                         },
                         child: const Text(
                           "Sign Up",
-                          style: TextStyle(color: CupertinoColors.systemBlue),
+                          style: TextStyle(color: CupertinoColors.systemOrange),
                         ),
                       ),
                     ],

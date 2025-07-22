@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
-class RecipeCard extends StatelessWidget {
+class RecipeCard extends StatefulWidget {
   final String imagePath;
   final String cardName;
   final List<String> ingredients;
@@ -71,20 +71,89 @@ class RecipeCard extends StatelessWidget {
   });
 
   @override
+  State<RecipeCard> createState() => _RecipeCardState();
+}
+
+class _RecipeCardState extends State<RecipeCard> {
+  bool isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
+    final _isDarkMode = CupertinoTheme.brightnessOf(context) == Brightness.dark;
+
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: margin,
+      onTapDown: (_) => setState(() => isPressed = true),
+      onTapUp: (_) => setState(() => isPressed = false),
+      onTapCancel: () => setState(() => isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        margin: widget.margin,
         decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(borderRadius),
+          color: widget.backgroundColor,
+          borderRadius: BorderRadius.circular(widget.borderRadius),
+          // ENHANCED BORDER FOR DARK MODE
+          border: Border.all(
+            color: _isDarkMode
+                ? CupertinoColors.systemOrange.withOpacity(
+                    0.6,
+                  ) // Stronger orange border
+                : const Color(0xFFD2691E).withOpacity(0.3),
+            width: _isDarkMode ? 1.5 : 1.2, // Thicker border in dark mode
+          ),
+          // IMPROVED SHADOW SYSTEM FOR DARK MODE
           boxShadow: [
+            // Primary deep shadow
             BoxShadow(
-              color: shadowColor.withOpacity(shadowOpacity),
-              blurRadius: shadowBlurRadius,
-              offset: shadowOffset,
+              color: _isDarkMode
+                  ? CupertinoColors.black.withOpacity(
+                      0.9,
+                    ) // Much stronger shadow
+                  : const Color(0xFF8B4513).withOpacity(0.25),
+              spreadRadius: _isDarkMode ? 4 : 3, // More spread in dark mode
+              blurRadius: _isDarkMode ? 30 : 25, // More blur in dark mode
+              offset: Offset(
+                0,
+                _isDarkMode ? 15 : 12,
+              ), // More offset in dark mode
             ),
+            // Secondary mid-level shadow with orange glow
+            BoxShadow(
+              color: _isDarkMode
+                  ? CupertinoColors.systemOrange.withOpacity(0.2) // Orange glow
+                  : const Color(0xFFD2691E).withOpacity(0.15),
+              spreadRadius: _isDarkMode ? 2 : 2,
+              blurRadius: _isDarkMode ? 20 : 18,
+              offset: Offset(0, _isDarkMode ? 10 : 8),
+            ),
+            // Close definition shadow
+            BoxShadow(
+              color: _isDarkMode
+                  ? CupertinoColors.black.withOpacity(0.6)
+                  : const Color(0xFF8B4513).withOpacity(0.12),
+              spreadRadius: _isDarkMode ? 2 : 1,
+              blurRadius: _isDarkMode ? 12 : 8,
+              offset: Offset(0, _isDarkMode ? 6 : 4),
+            ),
+            // Enhanced top highlight for dark mode
+            BoxShadow(
+              color: _isDarkMode
+                  ? CupertinoColors.white.withOpacity(
+                      0.15,
+                    ) // Stronger highlight
+                  : CupertinoColors.white.withOpacity(0.8),
+              spreadRadius: 0,
+              blurRadius: _isDarkMode ? 4 : 3,
+              offset: Offset(0, _isDarkMode ? -3 : -2),
+            ),
+            // Inner glow effect for dark mode only
+            if (_isDarkMode)
+              BoxShadow(
+                color: CupertinoColors.systemOrange.withOpacity(0.08),
+                spreadRadius: -3,
+                blurRadius: 10,
+                offset: const Offset(0, 0),
+              ),
           ],
         ),
         child: Column(
@@ -95,8 +164,8 @@ class RecipeCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(borderRadius),
-                    topRight: Radius.circular(borderRadius),
+                    topLeft: Radius.circular(widget.borderRadius),
+                    topRight: Radius.circular(widget.borderRadius),
                   ),
                   child: _buildImage(),
                 ),
@@ -106,26 +175,42 @@ class RecipeCard extends StatelessWidget {
                   right: 12,
                   child: Row(
                     children: [
-                      if (onFavorite != null) _buildActionButton(
-                        icon: isFavorite ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
-                        color: isFavorite ? favoriteColor : CupertinoColors.white,
-                        onPressed: onFavorite!,
-                        backgroundColor: CupertinoColors.white.withOpacity(0.9),
-                      ),
-                      if (onFavorite != null && (onEdit != null || onDelete != null)) const SizedBox(width: 8),
-                      if (onEdit != null) _buildActionButton(
-                        icon: CupertinoIcons.pencil,
-                        color: editColor,
-                        onPressed: onEdit!,
-                        backgroundColor: CupertinoColors.white.withOpacity(0.9),
-                      ),
-                      if (onEdit != null && onDelete != null) const SizedBox(width: 8),
-                      if (onDelete != null) _buildActionButton(
-                        icon: CupertinoIcons.trash,
-                        color: deleteColor,
-                        onPressed: onDelete!,
-                        backgroundColor: CupertinoColors.white.withOpacity(0.9),
-                      ),
+                      if (widget.onFavorite != null)
+                        _buildActionButton(
+                          icon: widget.isFavorite
+                              ? CupertinoIcons.heart_fill
+                              : CupertinoIcons.heart,
+                          color: widget.isFavorite
+                              ? widget.favoriteColor
+                              : CupertinoColors.white,
+                          onPressed: widget.onFavorite!,
+                          backgroundColor: CupertinoColors.white.withOpacity(
+                            0.9,
+                          ),
+                        ),
+                      if (widget.onFavorite != null &&
+                          (widget.onEdit != null || widget.onDelete != null))
+                        const SizedBox(width: 8),
+                      if (widget.onEdit != null)
+                        _buildActionButton(
+                          icon: CupertinoIcons.pencil,
+                          color: widget.editColor,
+                          onPressed: widget.onEdit!,
+                          backgroundColor: CupertinoColors.white.withOpacity(
+                            0.9,
+                          ),
+                        ),
+                      if (widget.onEdit != null && widget.onDelete != null)
+                        const SizedBox(width: 8),
+                      if (widget.onDelete != null)
+                        _buildActionButton(
+                          icon: CupertinoIcons.trash,
+                          color: widget.deleteColor,
+                          onPressed: widget.onDelete!,
+                          backgroundColor: CupertinoColors.white.withOpacity(
+                            0.9,
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -133,62 +218,70 @@ class RecipeCard extends StatelessWidget {
             ),
             // Card content
             Padding(
-              padding: padding,
+              padding: widget.padding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Card name
                   Text(
-                    cardName,
-                    style: nameStyle ?? const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: CupertinoColors.black,
-                    ),
+                    widget.cardName,
+                    style:
+                        widget.nameStyle ??
+                        const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: CupertinoColors.black,
+                        ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Ingredients section
-                  if (ingredients.isNotEmpty) ...[
+                  if (widget.ingredients.isNotEmpty) ...[
                     Text(
                       'Ingredients:',
-                      style: sectionHeaderStyle ?? const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: CupertinoColors.black,
-                      ),
+                      style:
+                          widget.sectionHeaderStyle ??
+                          const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: CupertinoColors.black,
+                          ),
                     ),
                     const SizedBox(height: 8),
                     _buildIngredientsList(),
                     const SizedBox(height: 16),
                   ],
-                  
+
                   // Method section
-                  if (method.isNotEmpty) ...[
+                  if (widget.method.isNotEmpty) ...[
                     Text(
                       'Method:',
-                      style: sectionHeaderStyle ?? const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: CupertinoColors.black,
-                      ),
+                      style:
+                          widget.sectionHeaderStyle ??
+                          const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: CupertinoColors.black,
+                          ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _truncateMethod(method),
-                      style: methodStyle ?? const TextStyle(
-                        fontSize: 14,
-                        color: CupertinoColors.systemGrey,
-                        height: 1.4,
-                      ),
+                      _truncateMethod(widget.method),
+                      style:
+                          widget.methodStyle ??
+                          const TextStyle(
+                            fontSize: 14,
+                            color: CupertinoColors.systemGrey,
+                            height: 1.4,
+                          ),
                     ),
                     const SizedBox(height: 16),
                   ],
-                  
+
                   // Tags section
-                  if (tags.isNotEmpty) _buildTags(),
+                  if (widget.tags.isNotEmpty) _buildTags(),
                 ],
               ),
             ),
@@ -200,26 +293,29 @@ class RecipeCard extends StatelessWidget {
 
   Widget _buildImage() {
     return Container(
-      height: imageHeight,
+      height: widget.imageHeight,
       width: double.infinity,
       child: ClipRRect(
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(borderRadius),
-          topRight: Radius.circular(borderRadius),
+          topLeft: Radius.circular(widget.borderRadius),
+          topRight: Radius.circular(widget.borderRadius),
         ),
-        child: imagePath.isNotEmpty ? _buildActualImage() : _buildPlaceholderImage(),
+        child: widget.imagePath.isNotEmpty
+            ? _buildActualImage()
+            : _buildPlaceholderImage(),
       ),
     );
   }
 
   Widget _buildActualImage() {
     // Check if it's a network URL (Supabase) or local asset
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    if (widget.imagePath.startsWith('http://') ||
+        widget.imagePath.startsWith('https://')) {
       // Network image (Supabase URL)
       return Image.network(
-        imagePath,
+        widget.imagePath,
         fit: BoxFit.cover,
-        height: imageHeight,
+        height: widget.imageHeight,
         width: double.infinity,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
@@ -232,9 +328,9 @@ class RecipeCard extends StatelessWidget {
     } else {
       // Local asset image
       return Image.asset(
-        imagePath,
+        widget.imagePath,
         fit: BoxFit.cover,
-        height: imageHeight,
+        height: widget.imageHeight,
         width: double.infinity,
         errorBuilder: (context, error, stackTrace) {
           return _buildPlaceholderImage();
@@ -245,18 +341,16 @@ class RecipeCard extends StatelessWidget {
 
   Widget _buildLoadingPlaceholder() {
     return Container(
-      height: imageHeight,
+      height: widget.imageHeight,
       width: double.infinity,
       color: CupertinoColors.systemGrey5,
-      child: const Center(
-        child: CupertinoActivityIndicator(),
-      ),
+      child: const Center(child: CupertinoActivityIndicator()),
     );
   }
 
   Widget _buildPlaceholderImage() {
     return Container(
-      height: imageHeight,
+      height: widget.imageHeight,
       width: double.infinity,
       color: CupertinoColors.systemGrey5,
       child: const Icon(
@@ -288,54 +382,56 @@ class RecipeCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Icon(
-          icon,
-          size: iconSize,
-          color: color,
-        ),
+        child: Icon(icon, size: widget.iconSize, color: color),
       ),
     );
   }
 
   Widget _buildIngredientsList() {
-    final displayIngredients = ingredients.take(maxIngredientsToShow).toList();
-    final hasMore = ingredients.length > maxIngredientsToShow;
+    final displayIngredients = widget.ingredients
+        .take(widget.maxIngredientsToShow)
+        .toList();
+    final hasMore = widget.ingredients.length > widget.maxIngredientsToShow;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ...displayIngredients.map((ingredient) => Padding(
-          padding: const EdgeInsets.only(bottom: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 6,
-                height: 6,
-                margin: const EdgeInsets.only(top: 6, right: 8),
-                decoration: const BoxDecoration(
-                  color: CupertinoColors.systemOrange,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  ingredient,
-                  style: ingredientStyle ?? const TextStyle(
-                    fontSize: 14,
-                    color: CupertinoColors.black,
-                    height: 1.3,
+        ...displayIngredients.map(
+          (ingredient) => Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  margin: const EdgeInsets.only(top: 6, right: 8),
+                  decoration: const BoxDecoration(
+                    color: CupertinoColors.systemOrange,
+                    shape: BoxShape.circle,
                   ),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: Text(
+                    ingredient,
+                    style:
+                        widget.ingredientStyle ??
+                        const TextStyle(
+                          fontSize: 14,
+                          color: CupertinoColors.black,
+                          height: 1.3,
+                        ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        )),
+        ),
         if (hasMore)
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              '+${ingredients.length - maxIngredientsToShow} more ingredients',
+              '+${widget.ingredients.length - widget.maxIngredientsToShow} more ingredients',
               style: const TextStyle(
                 fontSize: 13,
                 color: CupertinoColors.systemGrey,
@@ -348,47 +444,53 @@ class RecipeCard extends StatelessWidget {
   }
 
   String _truncateMethod(String text) {
-    if (text.length <= maxMethodLength) return text;
-    return '${text.substring(0, maxMethodLength)}...';
+    if (text.length <= widget.maxMethodLength) return text;
+    return '${text.substring(0, widget.maxMethodLength)}...';
   }
 
   Widget _buildTags() {
     return Wrap(
       spacing: 8,
       runSpacing: 6,
-      children: tags.map((tag) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: tagBackgroundColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: CupertinoColors.systemGrey4,
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 4,
-              height: 4,
-              decoration: const BoxDecoration(
-                color: CupertinoColors.systemGrey2,
-                shape: BoxShape.circle,
+      children: widget.tags
+          .map(
+            (tag) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: widget.tagBackgroundColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: CupertinoColors.systemGrey4,
+                  width: 0.5,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 4,
+                    height: 4,
+                    decoration: const BoxDecoration(
+                      color: CupertinoColors.systemGrey2,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    tag,
+                    style:
+                        widget.tagStyle ??
+                        const TextStyle(
+                          fontSize: 12,
+                          color: CupertinoColors.systemGrey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 6),
-            Text(
-              tag,
-              style: tagStyle ?? const TextStyle(
-                fontSize: 12,
-                color: CupertinoColors.systemGrey,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      )).toList(),
+          )
+          .toList(),
     );
   }
 }
@@ -429,7 +531,8 @@ class _RecipeCardExampleState extends State<RecipeCardExample> {
                 '1 tsp salt',
                 '2 cups chocolate chips',
               ],
-              method: 'Preheat oven to 375°F. 2. Mix dry ingredients. 3. Cream butter and sugars. 4. Add eggs and vanilla. 5. Combine wet and dry ingredients. 6. Fold in chocolate chips. 7. Drop spoonfuls on baking sheet. 8. Bake for 9-11 minutes until golden brown.',
+              method:
+                  'Preheat oven to 375°F. 2. Mix dry ingredients. 3. Cream butter and sugars. 4. Add eggs and vanilla. 5. Combine wet and dry ingredients. 6. Fold in chocolate chips. 7. Drop spoonfuls on baking sheet. 8. Bake for 9-11 minutes until golden brown.',
               tags: ['dessert', 'cookies', 'chocolate'],
               isFavorite: _isFavorite,
               onEdit: () {
