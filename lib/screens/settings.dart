@@ -160,27 +160,38 @@ class _SettingsState extends State<Settings> {
   }
 
   Color _adaptiveBackground(BuildContext context) {
-    return isDarkMode
-        ? _darkBackground
-        : CupertinoColors.systemGroupedBackground;
+    // Return transparent since we're using gradient background
+    return const Color(0x00000000);
   }
 
   Color _adaptiveSecondaryBackground(BuildContext context) {
     return isDarkMode
-        ? _darkSecondaryBackground
-        : CupertinoColors.secondarySystemGroupedBackground;
+        ? const Color(0xFF2C2C2E).withOpacity(
+            0.95,
+          ) // More opaque for better contrast
+        : const Color(
+            0xFFFFFDF8,
+          ).withOpacity(0.95); // Warmer white with opacity
   }
 
   Color _adaptivePrimaryText(BuildContext context) {
-    return isDarkMode ? _darkPrimaryText : CupertinoColors.black;
+    return isDarkMode
+        ? const Color(0xFFE5E5E7) // Brighter white for better contrast
+        : const Color(
+            0xFF2C1810,
+          ); // Darker for better contrast against gradient
   }
 
   Color _adaptiveSecondaryText(BuildContext context) {
-    return isDarkMode ? _darkSecondaryText : CupertinoColors.secondaryLabel;
+    return isDarkMode
+        ? const Color(0xFFD1D1D6) // Brighter grey
+        : const Color(0xFF8B4513); // Darker brown for better contrast
   }
 
   Color _adaptiveSeparator(BuildContext context) {
-    return isDarkMode ? _darkSeparator : CupertinoColors.separator;
+    return isDarkMode
+        ? const Color(0xFF48484A).withOpacity(0.8)
+        : const Color(0xFFD2691E).withOpacity(0.2); // Orange-tinted separator
   }
 
   void _showResetPasswordDialog() {
@@ -335,7 +346,24 @@ class _SettingsState extends State<Settings> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: _adaptiveSecondaryBackground(context),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12), // Slightly more rounded
+          // ADD SUBTLE SHADOW FOR BETTER DEPTH
+          boxShadow: [
+            BoxShadow(
+              color: isDarkMode
+                  ? CupertinoColors.black.withOpacity(0.3)
+                  : CupertinoColors.systemGrey.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          // ADD SUBTLE BORDER FOR BETTER DEFINITION
+          border: Border.all(
+            color: isDarkMode
+                ? CupertinoColors.systemOrange.withOpacity(0.3)
+                : const Color(0xFFD2691E).withOpacity(0.2),
+            width: 1.0,
+          ),
         ),
         child: Row(
           children: [
@@ -343,8 +371,18 @@ class _SettingsState extends State<Settings> {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: CupertinoColors.systemOrange,
+                // ENHANCED AVATAR WITH GRADIENT
+                gradient: const LinearGradient(
+                  colors: [CupertinoColors.systemOrange, Color(0xFFFF6B35)],
+                ),
                 borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: CupertinoColors.systemOrange.withOpacity(0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
               child: Icon(
                 currentUser?.photoURL != null
@@ -502,7 +540,11 @@ class _SettingsState extends State<Settings> {
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w500,
-          color: _adaptiveSecondaryText(context),
+          color: isDarkMode
+              ? CupertinoColors.systemOrange.withOpacity(
+                  0.8,
+                ) // Orange tint in dark mode
+              : const Color(0xFF8B4513), // Brown tint in light mode
         ),
       ),
     );
@@ -515,46 +557,79 @@ class _SettingsState extends State<Settings> {
       data: CupertinoThemeData(
         brightness: isDarkMode ? Brightness.dark : Brightness.light,
       ),
-      child: CupertinoPageScaffold(
-        backgroundColor: _adaptiveBackground(context),
-        navigationBar: CupertinoNavigationBar(
-          middle: Text(
-            'Settings',
-            style: TextStyle(color: _adaptivePrimaryText(context)),
-          ),
-          backgroundColor: _adaptiveBackground(context),
-          border: Border(
-            bottom: BorderSide(color: _adaptiveSeparator(context), width: 0.5),
+      child: Container(
+        // CORRECTED GRADIENT TO MATCH HOME PAGE EXACTLY
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDarkMode
+                ? [
+                    const Color(0xFF1C1C1E),
+                    const Color(0xFF3D2914), // Darker orange - SAME AS HOME
+                    const Color(0xFF2C1810), // Medium orange - SAME AS HOME
+                    const Color(0xFF1C1C1E),
+                  ]
+                : [
+                    const Color(0xFFFFF8F0), // Light cream - SAME AS HOME
+                    const Color(0xFFFFE5CC), // Light orange - SAME AS HOME
+                    const Color(0xFFFFF0E6), // Very light orange - SAME AS HOME
+                    CupertinoColors.white, // SAME AS HOME
+                  ],
+            stops: const [0.0, 0.3, 0.7, 1.0], // SAME STOPS AS HOME
           ),
         ),
-        child: SafeArea(
-          child: Stack(
-            children: [
-              ListView(
-                children: [
-                  const SizedBox(height: 20),
-                  _buildUserProfile(),
-                  _buildSectionTitle('Account'),
-                  _buildAccountSettings(),
-                  _buildSectionTitle('Preferences'),
-                  _buildPreferences(),
-                  _buildSectionTitle('About'),
-                  _buildAboutSection(),
-                  const SizedBox(height: 20),
-                  _buildLogoutSection(),
-                  const SizedBox(height: 40),
-                ],
+        child: CupertinoPageScaffold(
+          backgroundColor: const Color(0x00000000), // Transparent
+          navigationBar: CupertinoNavigationBar(
+            middle: Text(
+              'Settings',
+              style: TextStyle(
+                color: isDarkMode
+                    ? CupertinoColors.white
+                    : const Color(
+                        0xFF2C1810,
+                      ), // Darker text for better contrast
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
               ),
-
-              // Loading overlay
-              if (isLoading)
-                Container(
-                  color: _adaptiveBackground(context).withOpacity(0.3),
-                  child: const Center(
-                    child: CupertinoActivityIndicator(radius: 20),
-                  ),
+            ),
+            backgroundColor: const Color(
+              0x00000000,
+            ), // Transparent navigation bar
+            border: null, // Remove border to blend with gradient
+          ),
+          child: SafeArea(
+            child: Stack(
+              children: [
+                ListView(
+                  children: [
+                    const SizedBox(height: 20),
+                    _buildUserProfile(),
+                    _buildSectionTitle('Account'),
+                    _buildAccountSettings(),
+                    _buildSectionTitle('Preferences'),
+                    _buildPreferences(),
+                    _buildSectionTitle('About'),
+                    _buildAboutSection(),
+                    const SizedBox(height: 20),
+                    _buildLogoutSection(),
+                    const SizedBox(height: 40),
+                  ],
                 ),
-            ],
+
+                // Loading overlay
+                if (isLoading)
+                  Container(
+                    color: isDarkMode
+                        ? const Color(0xFF1C1C1E).withOpacity(0.8)
+                        : const Color(0xFFF8F8F8).withOpacity(0.8),
+                    child: const Center(
+                      child: CupertinoActivityIndicator(radius: 20),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -584,7 +659,15 @@ class SettingsSection extends StatelessWidget {
       decoration: BoxDecoration(
         color:
             backgroundColor ?? CupertinoColors.secondarySystemGroupedBackground,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12), // More rounded corners
+        // ADD SUBTLE SHADOW AND BORDER
+        boxShadow: [
+          BoxShadow(
+            color: CupertinoColors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

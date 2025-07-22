@@ -16,9 +16,10 @@ class _CreateRecipeState extends State<CreateRecipe> {
   final TextEditingController _methodController = TextEditingController();
   final TextEditingController _tagsController = TextEditingController();
 
-  String? _selectedImageUrl; // Changed from _selectedImagePath to _selectedImageUrl
+  String?
+  _selectedImageUrl; // Changed from _selectedImagePath to _selectedImageUrl
   final CustomRecipesService _customRecipesService = CustomRecipesService();
-  
+
   bool _isLoading = false;
 
   @override
@@ -38,162 +39,190 @@ class _CreateRecipeState extends State<CreateRecipe> {
       data: CupertinoThemeData(
         brightness: isDarkMode ? Brightness.dark : Brightness.light,
       ),
-      child: CupertinoPageScaffold(
-        backgroundColor: isDarkMode
-            ? const Color(0xFF1C1C1E)
-            : CupertinoColors.white,
-        navigationBar: CupertinoNavigationBar(
-          backgroundColor: isDarkMode
-              ? const Color(0xFF1C1C1E)
-              : CupertinoColors.white,
-          border: null,
-          leading: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: _isLoading ? null : () => Navigator.pop(context),
-            child: Icon(
-              CupertinoIcons.xmark,
-              color: _isLoading 
-                  ? CupertinoColors.systemGrey
-                  : (isDarkMode
-                      ? const Color(0xFFAEAEB2)
-                      : CupertinoColors.systemGrey),
-              size: 24,
-            ),
-          ),
-          middle: Text(
-            'Create New Recipe',
-            style: TextStyle(
-              color: isDarkMode ? CupertinoColors.white : CupertinoColors.black,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          trailing: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: _isLoading ? null : _saveRecipe,
-            child: Icon(
-              CupertinoIcons.checkmark,
-              color: _isLoading 
-                  ? CupertinoColors.systemGrey
-                  : CupertinoColors.systemBlue,
-              size: 24,
-            ),
+      child: Container(
+        // CORRECTED GRADIENT TO MATCH HOME PAGE EXACTLY
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDarkMode
+                ? [
+                    const Color(0xFF1C1C1E),
+                    const Color(0xFF3D2914), // Darker orange - SAME AS HOME
+                    const Color(0xFF2C1810), // Medium orange - SAME AS HOME
+                    const Color(0xFF1C1C1E),
+                  ]
+                : [
+                    const Color(0xFFFFF8F0), // Light cream - SAME AS HOME
+                    const Color(0xFFFFE5CC), // Light orange - SAME AS HOME
+                    const Color(0xFFFFF0E6), // Very light orange - SAME AS HOME
+                    CupertinoColors.white, // SAME AS HOME
+                  ],
+            stops: const [0.0, 0.3, 0.7, 1.0], // SAME STOPS AS HOME
           ),
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                // Subtitle
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Text(
-                    'Add a new recipe to your collection',
-                    style: TextStyle(
-                      color: isDarkMode
+        child: CupertinoPageScaffold(
+          backgroundColor: const Color(0x00000000), // Transparent
+          navigationBar: CupertinoNavigationBar(
+            backgroundColor: const Color(0x00000000), // Transparent
+            border: null,
+            leading: CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: _isLoading ? null : () => Navigator.pop(context),
+              child: Icon(
+                CupertinoIcons.xmark,
+                color: _isLoading
+                    ? CupertinoColors.systemGrey
+                    : (isDarkMode
                           ? const Color(0xFFAEAEB2)
-                          : CupertinoColors.systemGrey,
-                      fontSize: 16,
+                          : const Color(
+                              0xFF2C1810,
+                            )), // Darker for better contrast
+                size: 24,
+              ),
+            ),
+            middle: Text(
+              'Create New Recipe',
+              style: TextStyle(
+                color: isDarkMode
+                    ? CupertinoColors.white
+                    : const Color(
+                        0xFF2C1810,
+                      ), // Darker text for better contrast
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            trailing: CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: _isLoading ? null : _saveRecipe,
+              child: Icon(
+                CupertinoIcons.checkmark,
+                color: CupertinoColors.systemOrange, // Orange color
+                size: 24,
+              ),
+            ),
+          ),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  // Subtitle
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                    child: Text(
+                      'Add a new recipe to your collection',
+                      style: TextStyle(
+                        color: isDarkMode
+                            ? const Color(0xFFAEAEB2)
+                            : const Color(
+                                0xFF8B4513,
+                              ), // Darker for better contrast
+                        fontSize: 16,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Recipe Title
-                _buildSectionLabel('Recipe Title'),
-                const SizedBox(height: 8),
-                _buildSingleLineTextArea(
-                  controller: _titleController,
-                  hintText: 'Enter recipe title',
-                ),
-                const SizedBox(height: 24),
-
-                // Ingredients
-                _buildSectionLabel('Ingredients'),
-                const SizedBox(height: 8),
-                _buildExpandableTextArea(
-                  controller: _ingredientsController,
-                  hintText: 'Enter each ingredient on a new line\n\nExample:\n2 cups flour\n1 cup butter\n1/2 cup sugar',
-                  minLines: 5,
-                ),
-                const SizedBox(height: 24),
-
-                // Cooking Method
-                _buildSectionLabel('Cooking Method'),
-                const SizedBox(height: 8),
-                _buildExpandableTextArea(
-                  controller: _methodController,
-                  hintText: 'Describe the cooking steps\n\nExample:\n1. Preheat oven to 350°F\n2. Mix dry ingredients\n3. Add wet ingredients',
-                  minLines: 6,
-                ),
-                const SizedBox(height: 24),
-
-                // Tags
-                _buildSectionLabel('Tags'),
-                const SizedBox(height: 8),
-                _buildSingleLineTextArea(
-                  controller: _tagsController,
-                  hintText: 'Enter tags separated by commas (e.g., dessert, easy, quick)',
-                ),
-                const SizedBox(height: 24),
-
-                // Recipe Image
-                const SizedBox(height: 24),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: RecipeImagePicker(
-                    onImageChanged: (imageUrl) {
-                      setState(() {
-                        _selectedImageUrl = imageUrl;
-                      });
-                    },
-                    isDarkMode: isDarkMode,
+                  // Recipe Title
+                  _buildSectionLabel('Recipe Title'),
+                  const SizedBox(height: 8),
+                  _buildSingleLineTextArea(
+                    controller: _titleController,
+                    hintText: 'Enter recipe title',
                   ),
-                ),
-                const SizedBox(height: 40),
+                  const SizedBox(height: 24),
 
-                // Save Button
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: CupertinoButton(
-                      color: _isLoading 
-                          ? CupertinoColors.systemGrey
-                          : CupertinoColors.systemOrange,
-                      borderRadius: BorderRadius.circular(12),
-                      onPressed: _isLoading ? null : _saveRecipe,
-                      child: _isLoading
-                          ? const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CupertinoActivityIndicator(),
-                                SizedBox(width: 12),
-                                Text(
-                                  'Creating Recipe...',
-                                  style: TextStyle(
-                                    color: CupertinoColors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
+                  // Ingredients
+                  _buildSectionLabel('Ingredients'),
+                  const SizedBox(height: 8),
+                  _buildExpandableTextArea(
+                    controller: _ingredientsController,
+                    hintText:
+                        'Enter each ingredient on a new line\n\nExample:\n2 cups flour\n1 cup butter\n1/2 cup sugar',
+                    minLines: 6,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Cooking Method
+                  _buildSectionLabel('Cooking Method'),
+                  const SizedBox(height: 8),
+                  _buildExpandableTextArea(
+                    controller: _methodController,
+                    hintText:
+                        'Describe the cooking steps\n\nExample:\n1. Preheat oven to 350°F\n2. Mix dry ingredients\n3. Add wet ingredients',
+                    minLines: 6,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Tags
+                  _buildSectionLabel('Tags'),
+                  const SizedBox(height: 8),
+                  _buildSingleLineTextArea(
+                    controller: _tagsController,
+                    hintText:
+                        'Enter tags separated by commas (e.g., dessert, easy, quick)',
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Recipe Image
+                  const SizedBox(height: 24),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                    child: RecipeImagePicker(
+                      onImageChanged: (imageUrl) {
+                        setState(() {
+                          _selectedImageUrl = imageUrl;
+                        });
+                      },
+                      isDarkMode: isDarkMode,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+
+                  // Save Button
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: CupertinoButton(
+                        color: _isLoading
+                            ? CupertinoColors.systemGrey
+                            : CupertinoColors.systemOrange,
+                        borderRadius: BorderRadius.circular(12),
+                        onPressed: _isLoading ? null : _saveRecipe,
+                        child: _isLoading
+                            ? const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CupertinoActivityIndicator(),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    'Creating Recipe...',
+                                    style: TextStyle(
+                                      color: CupertinoColors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
+                                ],
+                              )
+                            : const Text(
+                                'Save Recipe',
+                                style: TextStyle(
+                                  color: CupertinoColors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                              ],
-                            )
-                          : const Text(
-                              'Save Recipe',
-                              style: TextStyle(
-                                color: CupertinoColors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
                               ),
-                            ),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-              ],
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
         ),
@@ -211,7 +240,11 @@ class _CreateRecipeState extends State<CreateRecipe> {
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: isDarkMode ? CupertinoColors.white : CupertinoColors.black,
+          // CHANGED TO BLACK FOR BOTH MODES
+          color: isDarkMode
+              ? CupertinoColors
+                    .white // White for dark mode
+              : CupertinoColors.black, // Black for light mode
         ),
       ),
     );
@@ -228,29 +261,45 @@ class _CreateRecipeState extends State<CreateRecipe> {
       child: Container(
         decoration: BoxDecoration(
           color: isDarkMode
-              ? const Color(0xFF2C2C2E)
-              : CupertinoColors.systemGrey6,
+              ? const Color(0xFF2C2C2E).withOpacity(0.95)
+              : const Color(0xFFFFFDF8),
           borderRadius: BorderRadius.circular(12.0),
           border: Border.all(
             color: isDarkMode
-                ? const Color(0xFF38383A)
-                : CupertinoColors.systemGrey4,
-            width: 1.0,
+                ? CupertinoColors.systemOrange.withOpacity(0.3)
+                : const Color(0xFFD2691E).withOpacity(0.3),
+            width: 1.2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: isDarkMode
+                  ? CupertinoColors.black.withOpacity(0.3)
+                  : CupertinoColors.systemGrey.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: CupertinoTextField(
           controller: controller,
           placeholder: hintText,
+          // FIXED PLACEHOLDER STYLING FOR BALANCED ALIGNMENT
           placeholderStyle: TextStyle(
+            fontSize: 16, // SAME SIZE AS INPUT TEXT
             color: isDarkMode
-                ? const Color(0xFFAEAEB2)
+                ? const Color(0xFF8E8E93)
                 : CupertinoColors.systemGrey2,
+            height: 1.0, // NORMALIZED LINE HEIGHT
           ),
           style: TextStyle(
-            color: isDarkMode ? CupertinoColors.white : CupertinoColors.black,
+            fontSize: 16, // MATCHING TEXT SIZE
+            color: isDarkMode ? const Color(0xFFE5E5E7) : CupertinoColors.black,
+            height: 1.0, // MATCHING LINE HEIGHT FOR PERFECT ALIGNMENT
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
           decoration: null,
+          textAlign: TextAlign.start,
+          textAlignVertical: TextAlignVertical.center,
         ),
       ),
     );
@@ -268,33 +317,58 @@ class _CreateRecipeState extends State<CreateRecipe> {
       child: Container(
         decoration: BoxDecoration(
           color: isDarkMode
-              ? const Color(0xFF2C2C2E)
-              : CupertinoColors.systemGrey6,
+              ? const Color(0xFF2C2C2E).withOpacity(0.95)
+              : const Color(0xFFFFFDF8),
           borderRadius: BorderRadius.circular(12.0),
           border: Border.all(
             color: isDarkMode
-                ? const Color(0xFF38383A)
-                : CupertinoColors.systemGrey4,
-            width: 1.0,
+                ? CupertinoColors.systemOrange.withOpacity(0.3)
+                : const Color(0xFFD2691E).withOpacity(0.3),
+            width: 1.2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: isDarkMode
+                  ? CupertinoColors.black.withOpacity(0.3)
+                  : CupertinoColors.systemGrey.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: CupertinoTextField(
           controller: controller,
           placeholder: hintText,
+          // FIXED PLACEHOLDER STYLING FOR PERFECT ALIGNMENT WITH USER INPUT
           placeholderStyle: TextStyle(
+            fontSize: 16, // SAME SIZE AS INPUT TEXT
             color: isDarkMode
-                ? const Color(0xFFAEAEB2)
+                ? const Color(0xFF8E8E93)
                 : CupertinoColors.systemGrey2,
+            height: 1.2, // EXACT SAME LINE HEIGHT AS INPUT
+            leadingDistribution: TextLeadingDistribution.even,
           ),
           style: TextStyle(
-            color: isDarkMode ? CupertinoColors.white : CupertinoColors.black,
+            fontSize: 16, // MATCHING TEXT SIZE
+            color: isDarkMode ? const Color(0xFFE5E5E7) : CupertinoColors.black,
+            height: 1.2, // EXACT SAME LINE HEIGHT AS PLACEHOLDER
+            leadingDistribution: TextLeadingDistribution.even,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
           decoration: null,
           minLines: minLines,
           maxLines: null,
           expands: false,
+          textAlign: TextAlign.start,
           textAlignVertical: TextAlignVertical.top,
+          keyboardType: TextInputType.multiline,
+          textInputAction: TextInputAction.newline,
+          // FORCE CONSISTENT TEXT BASELINE
+          strutStyle: const StrutStyle(
+            height: 1.2,
+            leading: 0.0,
+            forceStrutHeight: true,
+          ),
         ),
       ),
     );
@@ -354,7 +428,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
       if (recipeId != null) {
         // Success - show dialog and return data
         final isDarkMode = SharedPreferencesHelper.instance.isDarkMode;
-        
+
         showCupertinoDialog(
           context: context,
           builder: (context) => CupertinoTheme(

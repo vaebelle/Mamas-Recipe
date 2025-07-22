@@ -5,6 +5,8 @@ import 'package:mama_recipe/services/favorites_service.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/http.dart' as http;
 
 class RecipeDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> recipe;

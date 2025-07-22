@@ -28,27 +28,27 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   RecipeCategory _selectedCategory = RecipeCategory.allRecipes;
   bool _isDarkMode = false;
-  
+
   // Firebase services
   final RecipeService _recipeService = RecipeService();
   final FavoritesService _favoritesService = FavoritesService();
-  
+
   // Data lists
   List<Recipe> _allRecipes = [];
   List<Recipe> _favoriteRecipes = [];
   List<Recipe> _myRecipes = [];
   List<Recipe> _displayedRecipes = [];
-  
+
   // Loading states
   bool _isLoading = true;
   String _searchQuery = '';
 
   // Cache for favorite status to avoid constant rebuilding
   Map<String, bool> _favoriteStatusCache = {};
-  
+
   // BUG FIX: Track current user to detect login/logout
   String? _currentUserId;
-  
+
   // BUG FIX: Track if data is fresh to avoid unnecessary loads
   bool _dataIsFresh = false;
 
@@ -58,7 +58,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _loadThemePreference();
     _initializeData();
-    
+
     // Listen to search changes
     searchController.addListener(_onSearchChanged);
   }
@@ -88,15 +88,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   // BUG FIX: Check if user changed (login/logout) and refresh accordingly
   Future<void> _checkUserAndRefreshIfNeeded() async {
     final newUserId = _recipeService.customService.currentUserId;
-    
+
     if (_currentUserId != newUserId) {
-      print('🔄 User changed from $_currentUserId to $newUserId - refreshing data...');
+      print(
+        '🔄 User changed from $_currentUserId to $newUserId - refreshing data...',
+      );
       _currentUserId = newUserId;
-      
+
       // Clear cache when user changes
       _favoriteStatusCache.clear();
       _dataIsFresh = false;
-      
+
       await _loadData();
     }
   }
@@ -125,10 +127,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         _isLoading = true;
       });
     }
-    
+
     try {
       print('📊 Loading data...');
-      
+
       // Load each type of data separately for better error handling
       List<Recipe> allRecipes = [];
       List<Recipe> favoriteRecipes = [];
@@ -174,9 +176,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           _myRecipes = myRecipes;
           _dataIsFresh = true; // Mark data as fresh
           _isLoading = false; // Data loading completed
-          
-          print('📈 Final counts - All: ${_allRecipes.length}, Favorites: ${_favoriteRecipes.length}, My: ${_myRecipes.length}');
-          
+
+          print(
+            '📈 Final counts - All: ${_allRecipes.length}, Favorites: ${_favoriteRecipes.length}, My: ${_myRecipes.length}',
+          );
+
           _filterRecipes();
         });
       }
@@ -193,7 +197,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Future<void> _loadFavoriteStatusCache(List<Recipe> recipes) async {
     _favoriteStatusCache.clear();
-    
+
     for (Recipe recipe in recipes) {
       try {
         final isFavorite = await _favoritesService.isRecipeFavorited(
@@ -206,23 +210,31 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         _favoriteStatusCache['${recipe.id}_${recipe.type.name}'] = false;
       }
     }
-    
-    print('💾 Loaded favorite status for ${_favoriteStatusCache.length} recipes');
+
+    print(
+      '💾 Loaded favorite status for ${_favoriteStatusCache.length} recipes',
+    );
   }
 
   // BUG FIX: Smart favorite cache update that properly handles favorites list
-  void _updateFavoriteCacheQuickly(String recipeId, String recipeType, bool isFavorite) {
-    final cacheKey = '${recipeId}_${recipeType == 'custom' ? 'custom' : 'global'}';
-    
+  void _updateFavoriteCacheQuickly(
+    String recipeId,
+    String recipeType,
+    bool isFavorite,
+  ) {
+    final cacheKey =
+        '${recipeId}_${recipeType == 'custom' ? 'custom' : 'global'}';
+
     setState(() {
       _favoriteStatusCache[cacheKey] = isFavorite;
-      
+
       // Update favorite recipes list without full reload
       if (isFavorite) {
         // Find the recipe and add to favorites if not already there
         final recipe = _allRecipes.firstWhere(
-          (r) => r.id == recipeId && 
-                 (recipeType == 'custom' ? r.isCustom : r.isGlobal),
+          (r) =>
+              r.id == recipeId &&
+              (recipeType == 'custom' ? r.isCustom : r.isGlobal),
           orElse: () => Recipe(
             id: recipeId,
             name: 'Unknown Recipe',
@@ -230,12 +242,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             instructions: '',
             imageUrl: '',
             tags: '',
-            type: recipeType == 'custom' ? RecipeType.custom : RecipeType.global,
+            type: recipeType == 'custom'
+                ? RecipeType.custom
+                : RecipeType.global,
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
           ),
         );
-        
+
         if (!_favoriteRecipes.any((r) => r.id == recipeId)) {
           _favoriteRecipes.add(recipe);
           _favoriteRecipes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -244,18 +258,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         // Remove from favorites
         _favoriteRecipes.removeWhere((r) => r.id == recipeId);
       }
-      
+
       // Re-filter with updated data
       _filterRecipes();
     });
-    
+
     print('⚡ Quick cache update for $recipeId: $isFavorite');
   }
 
   // BUG FIX: Ensure filtering always happens when switching tabs
   void _filterRecipes() {
     List<Recipe> baseRecipes;
-    
+
     switch (_selectedCategory) {
       case RecipeCategory.allRecipes:
         baseRecipes = _allRecipes;
@@ -269,14 +283,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
 
     if (_searchQuery.isEmpty) {
-      _displayedRecipes = List.from(baseRecipes); // Create new list to ensure UI updates
+      _displayedRecipes = List.from(
+        baseRecipes,
+      ); // Create new list to ensure UI updates
     } else {
       _displayedRecipes = baseRecipes
           .where((recipe) => recipe.containsSearchTerms(_searchQuery))
           .toList();
     }
-    
-    print('🔍 Filtered to ${_displayedRecipes.length} recipes for category ${_selectedCategory.name}');
+
+    print(
+      '🔍 Filtered to ${_displayedRecipes.length} recipes for category ${_selectedCategory.name}',
+    );
   }
 
   @override
@@ -285,207 +303,237 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       data: CupertinoThemeData(
         brightness: _isDarkMode ? Brightness.dark : Brightness.light,
       ),
-      child: CupertinoPageScaffold(
-        backgroundColor: _isDarkMode
-            ? const Color(0xFF1C1C1E)
-            : CupertinoColors.white,
-        navigationBar: navigationBar(),
-        child: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              CupertinoSliverRefreshControl(
-                onRefresh: () async {
-                  // BUG FIX: Force fresh data on manual refresh
-                  _dataIsFresh = false;
-                  await _loadData();
-                },
-              ),
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    // Category title and Add Recipe button
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _getCategoryDisplayName(_selectedCategory),
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: _isDarkMode
-                                  ? CupertinoColors.white
-                                  : CupertinoColors.black,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: _isDarkMode
+                ? [
+                    const Color(0xFF1C1C1E),
+                    const Color(0xFF3D2914), // Darker orange
+                    const Color(0xFF2C1810), // Medium orange
+                    const Color(0xFF1C1C1E),
+                  ]
+                : [
+                    const Color(0xFFFFF8F0), // Light cream
+                    const Color(0xFFFFE5CC), // Light orange
+                    const Color(0xFFFFF0E6), // Very light orange
+                    CupertinoColors.white,
+                  ],
+            stops: const [0.0, 0.3, 0.7, 1.0],
+          ),
+        ),
+        child: CupertinoPageScaffold(
+          backgroundColor: CupertinoColors.white.withOpacity(
+            0.0,
+          ), // Make scaffold transparent
+          navigationBar: navigationBar(),
+          child: SafeArea(
+            child: CustomScrollView(
+              slivers: [
+                CupertinoSliverRefreshControl(
+                  onRefresh: () async {
+                    // BUG FIX: Force fresh data on manual refresh
+                    _dataIsFresh = false;
+                    await _loadData();
+                  },
+                ),
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      // Category title and Add Recipe button
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _getCategoryDisplayName(_selectedCategory),
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: _isDarkMode
+                                    ? CupertinoColors.white
+                                    : CupertinoColors.black,
+                              ),
                             ),
+                            CupertinoButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: _handleAddRecipe,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: CupertinoColors.systemOrange,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  CupertinoIcons.plus,
+                                  color: CupertinoColors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Search bar
+                      CustomTextField(
+                        controller: searchController,
+                        hintText: 'Search recipes...',
+                        obscureText: false,
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Category selector
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                        child: CustomSegmentedControl<RecipeCategory>(
+                          groupValue: _selectedCategory,
+                          backgroundColor: _isDarkMode
+                              ? const Color(0xFF2C2C2E)
+                              : CupertinoColors.systemGrey6,
+                          thumbColor: _isDarkMode
+                              ? const Color(0xFF3A3A3C)
+                              : CupertinoColors.white,
+                          onValueChanged: (RecipeCategory? value) {
+                            if (value != null && value != _selectedCategory) {
+                              setState(() {
+                                _selectedCategory = value;
+                                // BUG FIX: Immediately filter when switching tabs
+                                _filterRecipes();
+                              });
+                              print(
+                                '🔄 Switched to ${value.name} tab - ${_displayedRecipes.length} recipes',
+                              );
+                            }
+                          },
+                          children: <RecipeCategory, Widget>{
+                            RecipeCategory.allRecipes: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
+                              child: Text(
+                                'All',
+                                style: TextStyle(
+                                  color: _isDarkMode
+                                      ? CupertinoColors.white
+                                      : CupertinoColors.black,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            RecipeCategory.favorites: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
+                              child: Text(
+                                'Favorites',
+                                style: TextStyle(
+                                  color: _isDarkMode
+                                      ? CupertinoColors.white
+                                      : CupertinoColors.black,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            RecipeCategory.myRecipes: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
+                              child: Text(
+                                'Personal',
+                                style: TextStyle(
+                                  color: _isDarkMode
+                                      ? CupertinoColors.white
+                                      : CupertinoColors.black,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+
+                // Recipe List
+                if (_isLoading)
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CupertinoActivityIndicator(
+                            radius: 24,
+                            color: _isDarkMode
+                                ? CupertinoColors.white
+                                : CupertinoColors.systemGrey,
                           ),
-                          CupertinoButton(
-                            padding: EdgeInsets.zero,
-                            onPressed: _handleAddRecipe,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: CupertinoColors.systemOrange,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                CupertinoIcons.plus,
-                                color: CupertinoColors.white,
-                                size: 20,
-                              ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Loading recipes...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: _isDarkMode
+                                  ? const Color(0xFFAEAEB2)
+                                  : CupertinoColors.systemGrey,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    
-                    // Search bar
-                    CustomTextField(
-                      controller: searchController,
-                      hintText: 'Search recipes...',
-                      obscureText: false,
-                    ),
-                    const SizedBox(height: 20),
-                    
-                    // Category selector
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                      child: CustomSegmentedControl<RecipeCategory>(
-                        groupValue: _selectedCategory,
-                        backgroundColor: _isDarkMode
-                            ? const Color(0xFF2C2C2E)
-                            : CupertinoColors.systemGrey6,
-                        thumbColor: _isDarkMode
-                            ? const Color(0xFF3A3A3C)
-                            : CupertinoColors.white,
-                        onValueChanged: (RecipeCategory? value) {
-                          if (value != null && value != _selectedCategory) {
-                            setState(() {
-                              _selectedCategory = value;
-                              // BUG FIX: Immediately filter when switching tabs
-                              _filterRecipes();
-                            });
-                            print('🔄 Switched to ${value.name} tab - ${_displayedRecipes.length} recipes');
-                          }
-                        },
-                        children: <RecipeCategory, Widget>{
-                          RecipeCategory.allRecipes: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              'All',
-                              style: TextStyle(
-                                color: _isDarkMode
-                                    ? CupertinoColors.white
-                                    : CupertinoColors.black,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                  )
+                else if (_displayedRecipes.isEmpty)
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            CupertinoIcons.doc_text,
+                            size: 64,
+                            color: _isDarkMode
+                                ? const Color(0xFF8E8E93)
+                                : CupertinoColors.systemGrey3,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _getEmptyStateMessage(_selectedCategory),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: _isDarkMode
+                                  ? const Color(0xFFAEAEB2)
+                                  : CupertinoColors.systemGrey,
                             ),
                           ),
-                          RecipeCategory.favorites: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              'Favorites',
-                              style: TextStyle(
-                                color: _isDarkMode
-                                    ? CupertinoColors.white
-                                    : CupertinoColors.black,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          RecipeCategory.myRecipes: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              'Personal',
-                              style: TextStyle(
-                                color: _isDarkMode
-                                    ? CupertinoColors.white
-                                    : CupertinoColors.black,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        },
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
-              
-              // Recipe List
-              if (_isLoading)
-                SliverFillRemaining(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CupertinoActivityIndicator(
-                          radius: 24,
-                          color: _isDarkMode
-                              ? CupertinoColors.white
-                              : CupertinoColors.systemGrey,
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Loading recipes...',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: _isDarkMode
-                                ? const Color(0xFFAEAEB2)
-                                : CupertinoColors.systemGrey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else if (_displayedRecipes.isEmpty)
-                SliverFillRemaining(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          CupertinoIcons.doc_text,
-                          size: 64,
-                          color: _isDarkMode
-                              ? const Color(0xFF8E8E93)
-                              : CupertinoColors.systemGrey3,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _getEmptyStateMessage(_selectedCategory),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: _isDarkMode
-                                ? const Color(0xFFAEAEB2)
-                                : CupertinoColors.systemGrey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                _buildRecipesList(),
-            ],
+                  )
+                else
+                  _buildRecipesList(),
+              ],
+            ),
           ),
         ),
       ),
@@ -498,7 +546,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         final recipe = _displayedRecipes[index];
         final favoriteKey = '${recipe.id}_${recipe.type.name}';
         final isFavorite = _favoriteStatusCache[favoriteKey] ?? false;
-        
+
         return RecipeCard(
           imagePath: recipe.imageUrl,
           cardName: recipe.name,
@@ -541,10 +589,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 : CupertinoColors.systemGrey,
             fontWeight: FontWeight.w500,
           ),
-          onEdit: recipe.isCustom && recipe.userId == _recipeService.customService.currentUserId
+          onEdit:
+              recipe.isCustom &&
+                  recipe.userId == _recipeService.customService.currentUserId
               ? () => _handleEditRecipe(recipe)
               : null,
-          onDelete: recipe.isCustom && recipe.userId == _recipeService.customService.currentUserId
+          onDelete:
+              recipe.isCustom &&
+                  recipe.userId == _recipeService.customService.currentUserId
               ? () => _handleDeleteRecipe(recipe)
               : null,
           onFavorite: () => _handleFavoriteToggle(recipe),
@@ -557,7 +609,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   String _getEmptyStateMessage(RecipeCategory category) {
     switch (category) {
       case RecipeCategory.allRecipes:
-        return _searchQuery.isNotEmpty 
+        return _searchQuery.isNotEmpty
             ? 'No recipes found for "$_searchQuery".\nTry a different search term.'
             : 'No recipes available.\nCheck your internet connection and try refreshing.';
       case RecipeCategory.favorites:
@@ -630,24 +682,29 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               child: const Text('Delete'),
               onPressed: () async {
                 Navigator.pop(context);
-                
-                final success = await _recipeService.customService.deleteCustomRecipe(recipe.id);
+
+                final success = await _recipeService.customService
+                    .deleteCustomRecipe(recipe.id);
                 if (success) {
                   // Remove from local lists immediately
                   setState(() {
                     _allRecipes.removeWhere((r) => r.id == recipe.id);
                     _myRecipes.removeWhere((r) => r.id == recipe.id);
                     _favoriteRecipes.removeWhere((r) => r.id == recipe.id);
-                    _favoriteStatusCache.remove('${recipe.id}_${recipe.type.name}');
+                    _favoriteStatusCache.remove(
+                      '${recipe.id}_${recipe.type.name}',
+                    );
                     _filterRecipes();
                   });
-                  
+
                   if (mounted) {
                     _showSuccessDialog('Recipe deleted successfully');
                   }
                 } else {
                   if (mounted) {
-                    _showErrorDialog('Failed to delete recipe. Please try again.');
+                    _showErrorDialog(
+                      'Failed to delete recipe. Please try again.',
+                    );
                   }
                 }
               },
@@ -661,30 +718,30 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   // BUG FIX: Simplified favorite toggle - let RecipeDetailsScreen handle the heavy lifting
   Future<void> _handleFavoriteToggle(Recipe recipe) async {
     print('🔄 Toggling favorite for: ${recipe.name}');
-    
+
     final favoriteKey = '${recipe.id}_${recipe.type.name}';
     final currentStatus = _favoriteStatusCache[favoriteKey] ?? false;
     final newStatus = !currentStatus;
-    
+
     // Immediate optimistic update
     _updateFavoriteCacheQuickly(
-      recipe.id, 
-      recipe.isCustom ? 'custom' : 'global', 
-      newStatus
+      recipe.id,
+      recipe.isCustom ? 'custom' : 'global',
+      newStatus,
     );
 
     try {
       final success = await _recipeService.toggleRecipeFavorite(recipe);
-      
+
       if (success) {
         print('✅ Favorite toggle successful');
       } else {
         print('❌ Favorite toggle failed');
         // Revert optimistic update
         _updateFavoriteCacheQuickly(
-          recipe.id, 
-          recipe.isCustom ? 'custom' : 'global', 
-          currentStatus
+          recipe.id,
+          recipe.isCustom ? 'custom' : 'global',
+          currentStatus,
         );
         _showErrorDialog('Failed to update favorite status');
       }
@@ -692,9 +749,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       print('❌ Error toggling favorite: $e');
       // Revert optimistic update
       _updateFavoriteCacheQuickly(
-        recipe.id, 
-        recipe.isCustom ? 'custom' : 'global', 
-        currentStatus
+        recipe.id,
+        recipe.isCustom ? 'custom' : 'global',
+        currentStatus,
       );
       _showErrorDialog('Failed to update favorite status');
     }
@@ -705,11 +762,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     _recipeService.recordRecipeView(recipe).catchError((e) {
       print('❌ Analytics error: $e');
     });
-    
+
     // Convert Recipe to Map for RecipeDetailsScreen
     final favoriteKey = '${recipe.id}_${recipe.type.name}';
     final isFavorite = _favoriteStatusCache[favoriteKey] ?? false;
-    
+
     final recipeMap = {
       'id': recipe.id,
       'name': recipe.name,
@@ -724,10 +781,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
       CupertinoPageRoute(
-        builder: (context) => RecipeDetailsScreen(
-          recipe: recipeMap,
-          isDarkMode: _isDarkMode,
-        ),
+        builder: (context) =>
+            RecipeDetailsScreen(recipe: recipeMap, isDarkMode: _isDarkMode),
       ),
     );
 
@@ -736,11 +791,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       final recipeId = result['recipeId'] as String?;
       final recipeType = result['recipeType'] as String?;
       final newFavoriteStatus = result['isFavorite'] as bool? ?? false;
-      
+
       if (recipeId != null && recipeType != null) {
         // Quick cache update instead of full reload
         _updateFavoriteCacheQuickly(recipeId, recipeType, newFavoriteStatus);
-        print('⚡ Quick updated favorite cache for $recipeId: $newFavoriteStatus');
+        print(
+          '⚡ Quick updated favorite cache for $recipeId: $newFavoriteStatus',
+        );
       }
     }
   }
@@ -845,9 +902,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           size: 24,
         ),
       ),
-      backgroundColor: _isDarkMode
-          ? const Color(0xFF1C1C1E)
-          : CupertinoColors.white,
+      backgroundColor: CupertinoColors.white.withOpacity(
+        0.0,
+      ), // Make navigation bar transparent
       border: null,
     );
   }

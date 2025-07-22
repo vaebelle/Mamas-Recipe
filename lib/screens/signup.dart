@@ -69,7 +69,10 @@ class _SignupState extends State<Signup> {
           brightness: isDarkMode ? Brightness.dark : Brightness.light,
         ),
         child: CupertinoAlertDialog(
-          title: const Text('Password Requirements'),
+          title: const Text(
+            'Password Requirements',
+            style: TextStyle(color: CupertinoColors.systemOrange),
+          ),
           content: const Text(
             'Password must contain:\n\n'
             '• At least 6 characters\n'
@@ -81,7 +84,10 @@ class _SignupState extends State<Signup> {
           ),
           actions: [
             CupertinoDialogAction(
-              child: const Text('OK'),
+              child: const Text(
+                'OK',
+                style: TextStyle(color: CupertinoColors.systemOrange),
+              ),
               onPressed: () => Navigator.pop(context),
             ),
           ],
@@ -235,333 +241,327 @@ class _SignupState extends State<Signup> {
             ? const Color(0xFF1C1C1E)
             : CupertinoColors.white,
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 10),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 10),
 
-                  Icon(
-                    CupertinoIcons.person_add_solid,
-                    size: 50,
+                Image.asset(
+                  'assets/icons/mama_recipe_icon.png',
+                  width: 70,
+                  height: 70,
+                ),
+                const SizedBox(height: 20),
+
+                Text(
+                  "Mama's Recipes",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: CupertinoColors.systemOrange,
+                  ),
+                ),
+
+                const SizedBox(height: 5),
+
+                Text(
+                  "Share your culinary creations",
+                  style: TextStyle(
+                    fontSize: 12,
                     color: isDarkMode
                         ? const Color(0xFFAEAEB2)
                         : CupertinoColors.systemGrey,
                   ),
-                  const SizedBox(height: 20),
+                ),
 
-                  Text(
-                    "Mama's Recipes",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: isDarkMode
-                          ? CupertinoColors.white
-                          : CupertinoColors.black,
+                const SizedBox(height: 50),
+
+                // FIXED: Use firstNameController
+                CustomTextField(
+                  controller: firstNameController,
+                  hintText: "First Name",
+                  obscureText: false,
+                ),
+
+                const SizedBox(height: 20),
+
+                // FIXED: Use lastNameController
+                CustomTextField(
+                  controller: lastNameController,
+                  hintText: "Last Name",
+                  obscureText: false,
+                ),
+
+                const SizedBox(height: 20),
+
+                // FIXED: Keep emailController for email field
+                CustomTextField(
+                  controller: emailController,
+                  hintText: "Email",
+                  obscureText: false,
+                ),
+
+                const SizedBox(height: 20),
+
+                Column(
+                  children: [
+                    CustomTextField(
+                      controller: passwordController,
+                      hintText: "Password",
+                      obscureText: true,
                     ),
-                  ),
 
-                  const SizedBox(height: 5),
-
-                  Text(
-                    "Share your culinary creations",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDarkMode
-                          ? const Color(0xFFAEAEB2)
-                          : CupertinoColors.systemGrey,
-                    ),
-                  ),
-
-                  const SizedBox(height: 50),
-
-                  // FIXED: Use firstNameController
-                  CustomTextField(
-                    controller: firstNameController,
-                    hintText: "First Name",
-                    obscureText: false,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // FIXED: Use lastNameController
-                  CustomTextField(
-                    controller: lastNameController,
-                    hintText: "Last Name",
-                    obscureText: false,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // FIXED: Keep emailController for email field
-                  CustomTextField(
-                    controller: emailController,
-                    hintText: "Email",
-                    obscureText: false,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  Column(
-                    children: [
-                      CustomTextField(
-                        controller: passwordController,
-                        hintText: "Password",
-                        obscureText: true,
-                      ),
-
-                      if (_showPasswordHints &&
-                          passwordController.text.isNotEmpty)
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 25.0,
-                            vertical: 10.0,
-                          ),
-                          padding: const EdgeInsets.all(12.0),
-                          decoration: BoxDecoration(
+                    if (_showPasswordHints &&
+                        passwordController.text.isNotEmpty)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 25.0,
+                          vertical: 10.0,
+                        ),
+                        padding: const EdgeInsets.all(12.0),
+                        decoration: BoxDecoration(
+                          color: isDarkMode
+                              ? const Color(0xFF2C2C2E)
+                              : CupertinoColors.systemGrey6,
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(
                             color: isDarkMode
-                                ? const Color(0xFF2C2C2E)
-                                : CupertinoColors.systemGrey6,
-                            borderRadius: BorderRadius.circular(8.0),
-                            border: Border.all(
-                              color: isDarkMode
-                                  ? const Color(0xFF38383A)
-                                  : CupertinoColors.systemGrey4,
-                              width: 0.5,
-                            ),
+                                ? const Color(0xFF38383A)
+                                : CupertinoColors.systemGrey4,
+                            width: 0.5,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Password Requirements:',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDarkMode
-                                      ? const Color(0xFFAEAEB2)
-                                      : CupertinoColors.systemGrey,
-                                ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Password Requirements:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isDarkMode
+                                    ? const Color(0xFFAEAEB2)
+                                    : CupertinoColors.systemGrey,
                               ),
-                              const SizedBox(height: 8),
-                              ...(() {
-                                final validation = _getPasswordValidation(
-                                  passwordController.text,
-                                );
-                                final requirements = [
-                                  {
-                                    'key': 'length',
-                                    'text': 'At least 6 characters',
-                                  },
-                                  {
-                                    'key': 'uppercase',
-                                    'text': 'One uppercase letter',
-                                  },
-                                  {
-                                    'key': 'lowercase',
-                                    'text': 'One lowercase letter',
-                                  },
-                                  {'key': 'number', 'text': 'One number'},
-                                  {
-                                    'key': 'special',
-                                    'text': 'One special character',
-                                  },
-                                ];
+                            ),
+                            const SizedBox(height: 8),
+                            ...(() {
+                              final validation = _getPasswordValidation(
+                                passwordController.text,
+                              );
+                              final requirements = [
+                                {
+                                  'key': 'length',
+                                  'text': 'At least 6 characters',
+                                },
+                                {
+                                  'key': 'uppercase',
+                                  'text': 'One uppercase letter',
+                                },
+                                {
+                                  'key': 'lowercase',
+                                  'text': 'One lowercase letter',
+                                },
+                                {'key': 'number', 'text': 'One number'},
+                                {
+                                  'key': 'special',
+                                  'text': 'One special character',
+                                },
+                              ];
 
-                                return requirements.map<Widget>((req) {
-                                  final isValid =
-                                      validation[req['key']] as bool;
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 4.0),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          isValid
-                                              ? CupertinoIcons
-                                                    .checkmark_circle_fill
-                                              : CupertinoIcons.circle,
-                                          size: 14,
+                              return requirements.map<Widget>((req) {
+                                final isValid = validation[req['key']] as bool;
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 4.0),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isValid
+                                            ? CupertinoIcons
+                                                  .checkmark_circle_fill
+                                            : CupertinoIcons.circle,
+                                        size: 14,
+                                        color: isValid
+                                            ? CupertinoColors.systemGreen
+                                            : CupertinoColors.systemGrey3,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        req['text'] as String,
+                                        style: TextStyle(
+                                          fontSize: 11,
                                           color: isValid
                                               ? CupertinoColors.systemGreen
-                                              : CupertinoColors.systemGrey3,
+                                              : (isDarkMode
+                                                    ? const Color(0xFFAEAEB2)
+                                                    : CupertinoColors
+                                                          .systemGrey),
+                                          fontWeight: isValid
+                                              ? FontWeight.w500
+                                              : FontWeight.normal,
                                         ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          req['text'] as String,
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: isValid
-                                                ? CupertinoColors.systemGreen
-                                                : (isDarkMode
-                                                      ? const Color(0xFFAEAEB2)
-                                                      : CupertinoColors
-                                                            .systemGrey),
-                                            fontWeight: isValid
-                                                ? FontWeight.w500
-                                                : FontWeight.normal,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList();
-                              })(),
-                            ],
-                          ),
-                        ),
-
-                      if (!_showPasswordHints) const SizedBox(height: 5),
-                      if (!_showPasswordHints)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 25.0,
-                              ),
-                              child: GestureDetector(
-                                onTap: _showPasswordRequirements,
-                                child: const Text(
-                                  "Password Requirements",
-                                  style: TextStyle(
-                                    color: CupertinoColors.systemBlue,
-                                    fontSize: 12,
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ),
-                            ),
+                                );
+                              }).toList();
+                            })(),
                           ],
                         ),
-                    ],
-                  ),
+                      ),
 
-                  const SizedBox(height: 20),
-
-                  CustomTextField(
-                    controller: confirmPasswordController,
-                    hintText: "Confirm Password",
-                    obscureText: true,
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  if (errorMessage.isNotEmpty &&
-                      !errorMessage.contains('Password must contain'))
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                      child: Container(
-                        padding: const EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          color: CupertinoColors.systemRed.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6.0),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              CupertinoIcons.exclamationmark_triangle_fill,
-                              size: 16,
-                              color: CupertinoColors.systemRed,
+                    if (!_showPasswordHints) const SizedBox(height: 5),
+                    if (!_showPasswordHints)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 25.0,
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                errorMessage,
-                                style: const TextStyle(
-                                  color: CupertinoColors.systemRed,
+                            child: GestureDetector(
+                              onTap: _showPasswordRequirements,
+                              child: const Text(
+                                "Password Requirements",
+                                style: TextStyle(
+                                  color: CupertinoColors.systemOrange,
                                   fontSize: 12,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ),
+                  ],
+                ),
 
-                  const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-                  Button(
-                    onTap: isLoading ? null : signUp,
-                    text: isLoading ? "Loading..." : "Sign Up",
-                  ),
+                CustomTextField(
+                  controller: confirmPasswordController,
+                  hintText: "Confirm Password",
+                  obscureText: true,
+                ),
 
-                  const SizedBox(height: 20),
+                const SizedBox(height: 10),
 
-                  if (isLoading)
-                    const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: CupertinoActivityIndicator(),
-                    ),
-
-                  const SizedBox(height: 20),
-
+                if (errorMessage.isNotEmpty &&
+                    !errorMessage.contains('Password must contain'))
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 0.5,
-                            color: isDarkMode
-                                ? const Color(0xFF38383A)
-                                : CupertinoColors.systemGrey3,
+                    child: Container(
+                      padding: const EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.systemRed.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            CupertinoIcons.exclamationmark_triangle_fill,
+                            size: 16,
+                            color: CupertinoColors.systemRed,
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                          child: Text(
-                            'OR',
-                            style: TextStyle(
-                              color: isDarkMode
-                                  ? const Color(0xFFAEAEB2)
-                                  : CupertinoColors.systemGrey,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              errorMessage,
+                              style: const TextStyle(
+                                color: CupertinoColors.systemRed,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: Container(
-                            height: 0.5,
-                            color: isDarkMode
-                                ? const Color(0xFF38383A)
-                                : CupertinoColors.systemGrey3,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
 
-                  const SizedBox(height: 30),
+                const SizedBox(height: 20),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                Button(
+                  onTap: isLoading ? null : signUp,
+                  text: isLoading ? "Loading..." : "Sign Up",
+                  color: CupertinoColors.systemOrange,
+                ),
+
+                const SizedBox(height: 20),
+
+                if (isLoading)
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CupertinoActivityIndicator(),
+                  ),
+
+                const SizedBox(height: 20),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                  child: Row(
                     children: [
-                      Text(
-                        "Already have an account? ",
-                        style: TextStyle(
+                      Expanded(
+                        child: Container(
+                          height: 0.5,
                           color: isDarkMode
-                              ? const Color(0xFFAEAEB2)
-                              : CupertinoColors.systemGrey,
+                              ? const Color(0xFF38383A)
+                              : CupertinoColors.systemGrey3,
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            CupertinoPageRoute(
-                              builder: (BuildContext context) => const Login(),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          "Sign In",
-                          style: TextStyle(color: CupertinoColors.systemBlue),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                        child: Text(
+                          'OR',
+                          style: TextStyle(
+                            color: isDarkMode
+                                ? const Color(0xFFAEAEB2)
+                                : CupertinoColors.systemGrey,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          height: 0.5,
+                          color: isDarkMode
+                              ? const Color(0xFF38383A)
+                              : CupertinoColors.systemGrey3,
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+
+                const SizedBox(height: 30),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Already have an account? ",
+                      style: TextStyle(
+                        color: isDarkMode
+                            ? const Color(0xFFAEAEB2)
+                            : CupertinoColors.systemGrey,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (BuildContext context) => const Login(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        "Sign In",
+                        style: TextStyle(color: CupertinoColors.systemOrange),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
