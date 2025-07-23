@@ -95,8 +95,6 @@ class CustomRecipes {
   bool containsSearchTerms(String searchTerm) {
     final term = searchTerm.toLowerCase();
     return cRecipeName.toLowerCase().contains(term) ||
-        cRecipeIngredients.toLowerCase().contains(term) ||
-        cRecipeInstructions.toLowerCase().contains(term) ||
         tags.toLowerCase().contains(term);
   }
 

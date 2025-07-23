@@ -73,15 +73,35 @@ class _EditCustomRecipeState extends State<EditCustomRecipe> {
       data: CupertinoThemeData(
         brightness: isDarkMode ? Brightness.dark : Brightness.light,
       ),
-      child: CupertinoPageScaffold(
-        backgroundColor: isDarkMode
-            ? const Color(0xFF1C1C1E)
-            : CupertinoColors.white,
-        navigationBar: CupertinoNavigationBar(
-          backgroundColor: isDarkMode
-              ? const Color(0xFF1C1C1E)
-              : CupertinoColors.white,
-          border: null,
+      child: Container(
+        // GRADIENT TO MATCH HOME PAGE EXACTLY
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDarkMode
+                ? [
+                    const Color(0xFF1C1C1E),
+                    const Color(0xFF3D2914), // Darker orange - SAME AS HOME
+                    const Color(0xFF2C1810), // Medium orange - SAME AS HOME
+                    const Color(0xFF1C1C1E),
+                  ]
+                : [
+                    const Color(0xFFFFF8F0), // Light cream - SAME AS HOME
+                    const Color(0xFFFFE5CC), // Light orange - SAME AS HOME
+                    const Color(0xFFFFF0E6), // Very light orange - SAME AS HOME
+                    CupertinoColors.white, // SAME AS HOME
+                  ],
+            stops: const [0.0, 0.3, 0.7, 1.0], // SAME STOPS AS HOME
+          ),
+        ),
+        child: CupertinoPageScaffold(
+          backgroundColor: const Color(0x00000000), // Transparent
+          navigationBar: CupertinoNavigationBar(
+            backgroundColor: CupertinoColors.white.withOpacity(
+              0.0,
+            ), // Make navigation bar transparent - SAME AS HOME
+            border: null,
           leading: CupertinoButton(
             padding: EdgeInsets.zero,
             onPressed: _isLoading ? null : _handleCancel,
@@ -132,7 +152,13 @@ class _EditCustomRecipeState extends State<EditCustomRecipe> {
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
+          child: GestureDetector(
+            onTap: () {
+              // Dismiss keyboard when tapping on background
+              FocusScope.of(context).unfocus();
+            },
+            behavior: HitTestBehavior.opaque,
+            child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -153,8 +179,8 @@ class _EditCustomRecipeState extends State<EditCustomRecipe> {
                 _buildExpandableTextArea(
                   controller: _ingredientsController,
                   hintText: 'Enter ingredients (separate each with a new line)',
-                  minLines: 3,
-                  maxLines: 8,
+                  minLines: 4,
+                  maxLines: 10,
                 ),
                 const SizedBox(height: 24),
 
@@ -227,9 +253,11 @@ class _EditCustomRecipeState extends State<EditCustomRecipe> {
                 const SizedBox(height: 20),
               ],
             ),
+            ),
           ),
         ),
       ),
+    ),
     );
   }
 

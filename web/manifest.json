@@ -1,11 +1,11 @@
 {
-    "name": "mama_recipe",
-    "short_name": "mama_recipe",
+    "name": "Mama's Recipes",
+    "short_name": "Mama's Recipes",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#hexcode",
     "theme_color": "#hexcode",
-    "description": "A new Flutter project.",
+    "description": "Mama's Recipes - A Flutter recipe app",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

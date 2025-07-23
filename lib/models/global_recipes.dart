@@ -25,26 +25,54 @@ class GlobalRecipes {
   factory GlobalRecipes.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-    return GlobalRecipes(
+    // Debug: Print all available fields
+    print('🔍 DEBUG - All Firestore fields for ${doc.id}:');
+    data.forEach((key, value) {
+      if (key.toLowerCase().contains('image') || key.toLowerCase().contains('url')) {
+        print('  - $key: "$value"');
+      }
+    });
+
+    // Clean the image URL by removing quotes
+    String imageUrl = data['gRecipe_image'] ?? '';
+    if (imageUrl.startsWith('"') && imageUrl.endsWith('"')) {
+      imageUrl = imageUrl.substring(1, imageUrl.length - 1);
+    }
+    
+    final recipe = GlobalRecipes(
       gRecipeId: doc.id,
       gRecipeName: data['gRecipe_name'] ?? '',
       gRecipeIngredients: data['gRecipe_ingredients'] ?? '',
       gRecipeInstructions: data['gRecipe_instructions'] ?? '',
-      gRecipeImage: data['gRecipe_image'] ?? '',  // Updated field name
+      gRecipeImage: imageUrl,  // Use cleaned URL
       tags: data['tags'] ?? '',
       createdAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
+
+    // Debug: Check what we're getting from Firestore
+    print('🔍 DEBUG - Global Recipe: ${recipe.gRecipeName}');
+    print('🔍 DEBUG - Raw gRecipe_image from Firestore: "${data['gRecipe_image']}"');
+    print('🔍 DEBUG - Cleaned gRecipeImage field: "${recipe.gRecipeImage}"');
+    print('🔍 DEBUG - Is image URL empty? ${recipe.gRecipeImage.isEmpty}');
+    
+    return recipe;
   }
 
   // Factory constructor from Map (for JSON parsing)
   factory GlobalRecipes.fromMap(Map<String, dynamic> map) {
+    // Clean the image URL by removing quotes
+    String imageUrl = map['gRecipe_image'] ?? '';
+    if (imageUrl.startsWith('"') && imageUrl.endsWith('"')) {
+      imageUrl = imageUrl.substring(1, imageUrl.length - 1);
+    }
+    
     return GlobalRecipes(
       gRecipeId: map['gRecipe_id'] ?? '',
       gRecipeName: map['gRecipe_name'] ?? '',
       gRecipeIngredients: map['gRecipe_ingredients'] ?? '',
       gRecipeInstructions: map['gRecipe_instructions'] ?? '',
-      gRecipeImage: map['gRecipe_image'] ?? '',  // Updated field name
+      gRecipeImage: imageUrl,  // Use cleaned URL
       tags: map['tags'] ?? '',
       createdAt: map['created_at'] is Timestamp
           ? (map['created_at'] as Timestamp).toDate()
@@ -104,8 +132,6 @@ class GlobalRecipes {
   bool containsSearchTerms(String searchTerm) {
     final term = searchTerm.toLowerCase();
     return gRecipeName.toLowerCase().contains(term) ||
-        gRecipeIngredients.toLowerCase().contains(term) ||
-        gRecipeInstructions.toLowerCase().contains(term) ||
         tags.toLowerCase().contains(term);
   }
 

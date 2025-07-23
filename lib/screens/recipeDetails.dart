@@ -44,10 +44,29 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
       data: CupertinoThemeData(
         brightness: _isDarkMode ? Brightness.dark : Brightness.light,
       ),
-      child: CupertinoPageScaffold(
-        backgroundColor: _isDarkMode
-            ? const Color(0xFF1C1C1E)
-            : CupertinoColors.white,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: _isDarkMode
+                ? [
+                    const Color(0xFF1C1C1E),
+                    const Color(0xFF3D2914), // Darker orange
+                    const Color(0xFF2C1810), // Medium orange
+                    const Color(0xFF1C1C1E),
+                  ]
+                : [
+                    const Color(0xFFFFF8F0), // Light cream
+                    const Color(0xFFFFE5CC), // Light orange
+                    const Color(0xFFFFF0E6), // Very light orange
+                    CupertinoColors.white,
+                  ],
+            stops: const [0.0, 0.3, 0.7, 1.0],
+          ),
+        ),
+        child: CupertinoPageScaffold(
+          backgroundColor: const Color(0x00000000), // Transparent
         navigationBar: CupertinoNavigationBar(
           middle: Text(
             widget.recipe['name'] ?? 'Recipe Details',
@@ -105,15 +124,21 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
                     size: 24,
                   ),
                 ),
-          backgroundColor: _isDarkMode
-              ? const Color(0xFF1C1C1E)
-              : CupertinoColors.white,
+          backgroundColor: CupertinoColors.white.withOpacity(
+            0.0,
+          ), // Make navigation bar transparent - SAME AS HOME
           border: null,
         ),
         child: Stack(
           children: [
             SafeArea(
-              child: SingleChildScrollView(
+              child: GestureDetector(
+                onTap: () {
+                  // Dismiss keyboard when tapping on background
+                  FocusScope.of(context).unfocus();
+                },
+                behavior: HitTestBehavior.opaque,
+                child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -165,6 +190,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
                     ),
                   ],
                 ),
+                ),
               ),
             ),
             // Floating PDF Export Button
@@ -199,6 +225,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -538,20 +565,36 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
   }
 
   List<String> _parseMethodIntoSteps(String method) {
+    // Parse instructions into steps - handle both formats consistently (same as UI)
+    List<String> steps = [];
+    
+    // First, check if it already contains numbered steps (1., 2., etc.)
     if (method.contains(RegExp(r'\d+\.'))) {
-      return [method]; // Already numbered, return as is
-    }
-
-    final steps = method.split('.').where((s) => s.trim().isNotEmpty).toList();
-
-    if (steps.length > 1) {
-      return steps
+      // Split by number pattern and clean up
+      steps = method.split(RegExp(r'\d+\.'))
+          .where((s) => s.trim().isNotEmpty)
           .map((s) => s.trim())
-          .map((s) => s.endsWith('.') ? s : '$s.')
           .toList();
+    } else {
+      // Split by newlines first (common in custom recipes)
+      List<String> lines = method.split('\n')
+          .where((s) => s.trim().isNotEmpty)
+          .toList();
+      
+      if (lines.length > 1) {
+        // Multiple lines - treat each as a step
+        steps = lines.map((s) => s.trim()).toList();
+      } else {
+        // Single paragraph - split by periods for steps
+        steps = method.split('.')
+            .where((s) => s.trim().isNotEmpty)
+            .map((s) => s.trim())
+            .toList();
+      }
     }
 
-    return [method];
+    // Ensure steps end with periods for consistency
+    return steps.map((s) => s.endsWith('.') ? s : '$s.').toList();
   }
 
   Widget _buildRecipeImage() {
@@ -752,20 +795,35 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
       );
     }
 
-    // Simplified method parsing for better performance
+    // Parse instructions into steps - handle both formats consistently
+    List<String> steps = [];
+    
+    // First, check if it already contains numbered steps (1., 2., etc.)
     if (method.contains(RegExp(r'\d+\.'))) {
-      return Text(
-        method,
-        style: TextStyle(
-          fontSize: 16,
-          color: _isDarkMode ? CupertinoColors.white : CupertinoColors.black,
-          height: 1.5,
-        ),
-      );
+      // Split by number pattern and clean up
+      steps = method.split(RegExp(r'\d+\.'))
+          .where((s) => s.trim().isNotEmpty)
+          .map((s) => s.trim())
+          .toList();
+    } else {
+      // Split by newlines first (common in custom recipes)
+      List<String> lines = method.split('\n')
+          .where((s) => s.trim().isNotEmpty)
+          .toList();
+      
+      if (lines.length > 1) {
+        // Multiple lines - treat each as a step
+        steps = lines.map((s) => s.trim()).toList();
+      } else {
+        // Single paragraph - split by periods for steps
+        steps = method.split('.')
+            .where((s) => s.trim().isNotEmpty)
+            .map((s) => s.trim())
+            .toList();
+      }
     }
 
-    final steps = method.split('.').where((s) => s.trim().isNotEmpty).toList();
-
+    // If we have multiple steps, show them with numbers
     if (steps.length > 1) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,

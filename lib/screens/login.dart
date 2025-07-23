@@ -194,7 +194,13 @@ class _LoginState extends State<Login> {
             ? const Color(0xFF1C1C1E)
             : CupertinoColors.white,
         child: SafeArea(
-          child: Center(
+          child: GestureDetector(
+            onTap: () {
+              // Dismiss keyboard when tapping on background
+              FocusScope.of(context).unfocus();
+            },
+            behavior: HitTestBehavior.opaque,
+            child: Center(
             child: SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -344,6 +350,7 @@ class _LoginState extends State<Login> {
                   ),
                 ],
               ),
+            ),
             ),
           ),
         ),

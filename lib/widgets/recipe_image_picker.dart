@@ -217,53 +217,65 @@ class _RecipeImagePickerState extends State<RecipeImagePicker> {
       );
     }
 
-    return Container(
-      height: 200,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: widget.isDarkMode
-            ? const Color(0xFF2C2C2E)
-            : CupertinoColors.systemGrey6,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+      child: Container(
+        height: 200,
+        width: double.infinity,
+        decoration: BoxDecoration(
           color: widget.isDarkMode
-              ? const Color(0xFF3A3A3C)
-              : CupertinoColors.systemGrey4,
-          width: 1,
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Stack(
-          children: [
-            // Image or placeholder
-            SizedBox(
-              width: double.infinity,
-              height: double.infinity,
-              child: (_selectedImage != null || (_imageUrl != null && _imageUrl!.isNotEmpty))
-                  ? imageWidget
-                  : Center(child: imageWidget),
+              ? const Color(0xFF2C2C2E).withOpacity(0.95)
+              : const Color(0xFFFFFDF8),
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(
+            color: widget.isDarkMode
+                ? CupertinoColors.systemOrange.withOpacity(0.3)
+                : const Color(0xFFD2691E).withOpacity(0.3),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: widget.isDarkMode
+                  ? CupertinoColors.black.withOpacity(0.3)
+                  : CupertinoColors.systemGrey.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-            
-            // Upload indicator overlay
-            if (_isUploading)
-              Container(
-                color: CupertinoColors.black.withOpacity(0.5),
-                child: const Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CupertinoActivityIndicator(color: CupertinoColors.white),
-                      SizedBox(height: 8),
-                      Text(
-                        'Uploading...',
-                        style: TextStyle(color: CupertinoColors.white),
-                      ),
-                    ],
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12.0),
+          child: Stack(
+            children: [
+              // Image or placeholder
+              SizedBox(
+                width: double.infinity,
+                height: double.infinity,
+                child: (_selectedImage != null || (_imageUrl != null && _imageUrl!.isNotEmpty))
+                    ? imageWidget
+                    : Center(child: imageWidget),
+              ),
+              
+              // Upload indicator overlay
+              if (_isUploading)
+                Container(
+                  color: CupertinoColors.black.withOpacity(0.5),
+                  child: const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CupertinoActivityIndicator(color: CupertinoColors.white),
+                        SizedBox(height: 8),
+                        Text(
+                          'Uploading...',
+                          style: TextStyle(color: CupertinoColors.white),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -274,29 +286,21 @@ class _RecipeImagePickerState extends State<RecipeImagePicker> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Recipe Image',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: widget.isDarkMode
-                ? CupertinoColors.white
-                : CupertinoColors.black,
-          ),
-        ),
-        const SizedBox(height: 8),
         GestureDetector(
           onTap: _isUploading ? null : _showImageSourceDialog,
           child: _buildImageDisplay(),
         ),
         const SizedBox(height: 8),
-        Text(
-          'Tap to add or change recipe image',
-          style: TextStyle(
-            fontSize: 12,
-            color: widget.isDarkMode
-                ? const Color(0xFFAEAEB2)
-                : CupertinoColors.systemGrey,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 25.0),
+          child: Text(
+            'Tap to add or change recipe image',
+            style: TextStyle(
+              fontSize: 12,
+              color: widget.isDarkMode
+                  ? const Color(0xFFAEAEB2)
+                  : CupertinoColors.systemGrey,
+            ),
           ),
         ),
       ],

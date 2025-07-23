@@ -41,6 +41,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   // Loading states
   bool _isLoading = true;
+  bool _isRefreshing = false;
   String _searchQuery = '';
 
   // Cache for favorite status to avoid constant rebuilding
@@ -330,13 +331,27 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           ), // Make scaffold transparent
           navigationBar: navigationBar(),
           child: SafeArea(
-            child: CustomScrollView(
+            child: GestureDetector(
+              onTap: () {
+                // Dismiss keyboard when tapping on background
+                FocusScope.of(context).unfocus();
+              },
+              behavior: HitTestBehavior.opaque,
+              child: CustomScrollView(
               slivers: [
                 CupertinoSliverRefreshControl(
                   onRefresh: () async {
+                    setState(() {
+                      _isRefreshing = true;
+                    });
+                    
                     // BUG FIX: Force fresh data on manual refresh
                     _dataIsFresh = false;
                     await _loadData();
+                    
+                    setState(() {
+                      _isRefreshing = false;
+                    });
                   },
                 ),
                 SliverToBoxAdapter(
@@ -475,7 +490,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 ),
 
                 // Recipe List
-                if (_isLoading)
+                if (_isLoading && !_isRefreshing)
                   SliverFillRemaining(
                     child: Center(
                       child: Column(
@@ -533,6 +548,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 else
                   _buildRecipesList(),
               ],
+            ),
             ),
           ),
         ),

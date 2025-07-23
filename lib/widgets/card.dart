@@ -308,10 +308,15 @@ class _RecipeCardState extends State<RecipeCard> {
   }
 
   Widget _buildActualImage() {
+    // Debug: Check what imagePath we received
+    print('🖼️ DEBUG - RecipeCard imagePath: "${widget.imagePath}"');
+    print('🖼️ DEBUG - Is HTTP/HTTPS? ${widget.imagePath.startsWith('http://') || widget.imagePath.startsWith('https://')}');
+    
     // Check if it's a network URL (Supabase) or local asset
     if (widget.imagePath.startsWith('http://') ||
         widget.imagePath.startsWith('https://')) {
       // Network image (Supabase URL)
+      print('🌐 DEBUG - Loading network image: ${widget.imagePath}');
       return Image.network(
         widget.imagePath,
         fit: BoxFit.cover,
@@ -319,9 +324,22 @@ class _RecipeCardState extends State<RecipeCard> {
         width: double.infinity,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
-          return _buildLoadingPlaceholder();
+          // Use a subtle loading state instead of spinning indicator
+          return Container(
+            height: widget.imageHeight,
+            width: double.infinity,
+            color: CupertinoColors.systemGrey6,
+            child: Center(
+              child: Icon(
+                CupertinoIcons.photo,
+                size: 32,
+                color: CupertinoColors.systemGrey3.withOpacity(0.5),
+              ),
+            ),
+          );
         },
         errorBuilder: (context, error, stackTrace) {
+          print('❌ DEBUG - Network image error: $error');
           return _buildPlaceholderImage();
         },
       );
@@ -337,15 +355,6 @@ class _RecipeCardState extends State<RecipeCard> {
         },
       );
     }
-  }
-
-  Widget _buildLoadingPlaceholder() {
-    return Container(
-      height: widget.imageHeight,
-      width: double.infinity,
-      color: CupertinoColors.systemGrey5,
-      child: const Center(child: CupertinoActivityIndicator()),
-    );
   }
 
   Widget _buildPlaceholderImage() {

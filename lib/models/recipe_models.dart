@@ -31,7 +31,7 @@ class Recipe {
 
   // Create from GlobalRecipes
   factory Recipe.fromGlobalRecipe(GlobalRecipes global) {
-    return Recipe(
+    final recipe = Recipe(
       id: global.gRecipeId,
       name: global.gRecipeName,
       ingredients: global.gRecipeIngredients,
@@ -42,6 +42,13 @@ class Recipe {
       createdAt: global.createdAt,
       updatedAt: global.updatedAt,
     );
+
+    // Debug: Check Recipe model mapping
+    print('🔄 DEBUG - Recipe mapping for: ${recipe.name}');
+    print('🔄 DEBUG - global.gRecipeImage: "${global.gRecipeImage}"');
+    print('🔄 DEBUG - recipe.imageUrl: "${recipe.imageUrl}"');
+    
+    return recipe;
   }
 
   // Create from CustomRecipes
@@ -82,8 +89,6 @@ class Recipe {
   bool containsSearchTerms(String searchTerm) {
     final term = searchTerm.toLowerCase();
     return name.toLowerCase().contains(term) ||
-        ingredients.toLowerCase().contains(term) ||
-        instructions.toLowerCase().contains(term) ||
         tags.toLowerCase().contains(term);
   }
 

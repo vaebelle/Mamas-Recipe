@@ -104,7 +104,13 @@ class _CreateRecipeState extends State<CreateRecipe> {
             ),
           ),
           child: SafeArea(
-            child: SingleChildScrollView(
+            child: GestureDetector(
+              onTap: () {
+                // Dismiss keyboard when tapping on background
+                FocusScope.of(context).unfocus();
+              },
+              behavior: HitTestBehavior.opaque,
+              child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -168,17 +174,15 @@ class _CreateRecipeState extends State<CreateRecipe> {
                   const SizedBox(height: 24),
 
                   // Recipe Image
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                    child: RecipeImagePicker(
-                      onImageChanged: (imageUrl) {
-                        setState(() {
-                          _selectedImageUrl = imageUrl;
-                        });
-                      },
-                      isDarkMode: isDarkMode,
-                    ),
+                  _buildSectionLabel('Recipe Image'),
+                  const SizedBox(height: 12),
+                  RecipeImagePicker(
+                    onImageChanged: (imageUrl) {
+                      setState(() {
+                        _selectedImageUrl = imageUrl;
+                      });
+                    },
+                    isDarkMode: isDarkMode,
                   ),
                   const SizedBox(height: 40),
 
@@ -223,6 +227,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
                   const SizedBox(height: 20),
                 ],
               ),
+            ),
             ),
           ),
         ),
