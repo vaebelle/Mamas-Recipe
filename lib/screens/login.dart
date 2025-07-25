@@ -18,7 +18,8 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
-  bool isLoading = false;
+  bool isLoginLoading = false; // Separate loading state for login
+  bool isGoogleLoading = false; // Separate loading state for Google
 
   @override
   void dispose() {
@@ -29,7 +30,7 @@ class _LoginState extends State<Login> {
 
   void signIn() async {
     setState(() {
-      isLoading = true;
+      isLoginLoading = true; // Only set login loading
     });
 
     try {
@@ -65,7 +66,7 @@ class _LoginState extends State<Login> {
             errorMessage = e.message ?? 'An error occurred during sign in.';
         }
 
-        _showErrorDialog('Login Failed', errorMessage);
+        _showErrorDialog('Login Failed', "Please try again.");
       }
     } catch (e) {
       if (mounted) {
@@ -77,7 +78,7 @@ class _LoginState extends State<Login> {
     } finally {
       if (mounted) {
         setState(() {
-          isLoading = false;
+          isLoginLoading = false; // Reset only login loading
         });
       }
     }
@@ -85,7 +86,7 @@ class _LoginState extends State<Login> {
 
   void signInWithGoogle() async {
     setState(() {
-      isLoading = true;
+      isGoogleLoading = true; // Only set Google loading
     });
 
     try {
@@ -153,7 +154,7 @@ class _LoginState extends State<Login> {
     } finally {
       if (mounted) {
         setState(() {
-          isLoading = false;
+          isGoogleLoading = false; // Reset only Google loading
         });
       }
     }
@@ -201,156 +202,168 @@ class _LoginState extends State<Login> {
             },
             behavior: HitTestBehavior.opaque,
             child: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 10),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 10),
 
-                  Image.asset(
-                    'assets/icons/mama_recipe_icon.png',
-                    width: 70,
-                    height: 70,
-                  ),
-                  const SizedBox(height: 20),
+                    Image.asset(
+                      'assets/icons/mama_recipe_icon.png',
+                      width: 70,
+                      height: 70,
+                    ),
+                    const SizedBox(height: 20),
 
-                  Text(
-                    "Mama's Recipes",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      // color: isDarkMode
-                      //     ? CupertinoColors.white
-                      //     : CupertinoColors.black,
+                    Text(
+                      "Mama's Recipes",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.systemOrange,
+                      ),
+                    ),
+
+                    const SizedBox(height: 5),
+
+                    Text(
+                      "Share your culinary creations",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDarkMode
+                            ? const Color(0xFFAEAEB2)
+                            : CupertinoColors.systemGrey,
+                      ),
+                    ),
+
+                    const SizedBox(height: 50),
+
+                    CustomTextField(
+                      controller: usernameController,
+                      hintText: "Email",
+                      obscureText: false,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    CustomTextField(
+                      controller: passwordController,
+                      hintText: "Password",
+                      obscureText: true,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // LOGIN BUTTON - Only shows loading when isLoginLoading is true
+                    Button(
+                      onTap: (isLoginLoading || isGoogleLoading)
+                          ? null
+                          : signIn,
+                      text: isLoginLoading ? "Loading..." : "Login",
                       color: CupertinoColors.systemOrange,
                     ),
-                  ),
 
-                  const SizedBox(height: 5),
+                    const SizedBox(height: 20),
 
-                  Text(
-                    "Share your culinary creations",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDarkMode
-                          ? const Color(0xFFAEAEB2)
-                          : CupertinoColors.systemGrey,
-                    ),
-                  ),
-
-                  const SizedBox(height: 50),
-
-                  CustomTextField(
-                    controller: usernameController,
-                    hintText: "Email",
-                    obscureText: false,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  CustomTextField(
-                    controller: passwordController,
-                    hintText: "Password",
-                    obscureText: true,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  Button(
-                    onTap: isLoading ? null : signIn,
-                    text: isLoading ? "Loading..." : "Login",
-                    color: CupertinoColors.systemOrange,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  Button(
-                    onTap: isLoading ? null : signInWithGoogle,
-                    text: isLoading ? "Loading..." : "Continue with Google",
-                    borderRadius: 20.0,
-                    color: CupertinoColors.white,
-                    textColor: CupertinoColors.black,
-                    border: Border.all(
-                      color: CupertinoColors.systemGrey4,
-                      width: 1.0,
-                    ),
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  if (isLoading)
-                    const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: CupertinoActivityIndicator(),
+                    // GOOGLE BUTTON - Only shows loading when isGoogleLoading is true
+                    Button(
+                      onTap: (isLoginLoading || isGoogleLoading)
+                          ? null
+                          : signInWithGoogle,
+                      text: isGoogleLoading
+                          ? "Loading..."
+                          : "Continue with Google",
+                      iconPath: 'assets/icons/google.png',
+                      borderRadius: 20.0,
+                      color: CupertinoColors.white,
+                      textColor: CupertinoColors.black,
+                      border: Border.all(
+                        color: CupertinoColors.systemGrey4,
+                        width: 1.0,
+                      ),
                     ),
 
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 0.5,
-                            color: isDarkMode
-                                ? const Color(0xFF38383A)
-                                : CupertinoColors.systemGrey3,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                          child: Text(
-                            'OR',
-                            style: TextStyle(
+                    const SizedBox(height: 40),
+
+                    // ACTIVITY INDICATOR - Shows when either button is loading
+                    if (isLoginLoading || isGoogleLoading)
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CupertinoActivityIndicator(),
+                      ),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 0.5,
                               color: isDarkMode
-                                  ? const Color(0xFFAEAEB2)
-                                  : CupertinoColors.systemGrey,
+                                  ? const Color(0xFF38383A)
+                                  : CupertinoColors.systemGrey3,
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: Container(
-                            height: 0.5,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 25.0,
+                            ),
+                            child: Text(
+                              'OR',
+                              style: TextStyle(
+                                color: isDarkMode
+                                    ? const Color(0xFFAEAEB2)
+                                    : CupertinoColors.systemGrey,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(
+                              height: 0.5,
+                              color: isDarkMode
+                                  ? const Color(0xFF38383A)
+                                  : CupertinoColors.systemGrey3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Don't have an account? ",
+                          style: TextStyle(
                             color: isDarkMode
-                                ? const Color(0xFF38383A)
-                                : CupertinoColors.systemGrey3,
+                                ? const Color(0xFFAEAEB2)
+                                : CupertinoColors.systemGrey,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (BuildContext context) =>
+                                    const Signup(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "Sign Up",
+                            style: TextStyle(
+                              color: CupertinoColors.systemOrange,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account? ",
-                        style: TextStyle(
-                          color: isDarkMode
-                              ? const Color(0xFFAEAEB2)
-                              : CupertinoColors.systemGrey,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            CupertinoPageRoute(
-                              builder: (BuildContext context) => const Signup(),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          "Sign Up",
-                          style: TextStyle(color: CupertinoColors.systemOrange),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
             ),
           ),
         ),
