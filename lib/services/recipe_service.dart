@@ -10,14 +10,14 @@ class RecipeService {
   final FavoritesService favoritesService = FavoritesService();
   final UserGlobalRecipeAccessService accessService = UserGlobalRecipeAccessService();
 
-  // Get all recipes (global + user's custom) - FIXED VERSION
+  // Get all recipes
   Future<List<Recipe>> getAllRecipes() async {
     try {
-      // Get global recipes using Future instead of Stream
-      final globalRecipes = await globalService.getGlobalRecipesPaginated(limit: 50);
+      // Get global recipes
+      final globalRecipes = await globalService.getGlobalRecipesPaginated(limit: 500);
       final globalRecipeModels = globalRecipes.map((g) => Recipe.fromGlobalRecipe(g)).toList();
 
-      // Get user's custom recipes - convert stream to future
+      // Get user's custom recipes 
       final customRecipesSnapshot = await customService.getUserCustomRecipes().first;
       final customRecipeModels = customRecipesSnapshot.map((c) => Recipe.fromCustomRecipe(c)).toList();
 
@@ -37,7 +37,7 @@ class RecipeService {
   // Get only global recipes
   Future<List<Recipe>> getGlobalRecipes() async {
     try {
-      final globalRecipes = await globalService.getGlobalRecipesPaginated(limit: 100);
+      final globalRecipes = await globalService.getGlobalRecipesPaginated(limit: 500);
       return globalRecipes.map((g) => Recipe.fromGlobalRecipe(g)).toList();
     } catch (e) {
       print('❌ Error getting global recipes: $e');

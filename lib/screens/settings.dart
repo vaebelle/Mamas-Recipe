@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mama_recipe/services/auth_service.dart';
-import 'package:mama_recipe/screens/login.dart';
 import 'package:mama_recipe/screens/authentication.dart';
 import 'package:mama_recipe/widgets/settingsTile.dart';
 import 'package:mama_recipe/widgets/sharedPreference.dart';
@@ -18,13 +17,7 @@ class _SettingsState extends State<Settings> {
   bool isLoading = false;
   final TextEditingController _emailController = TextEditingController();
 
-  // Dark mode colors
-  static const Color _darkBackground = Color(0xFF1C1C1E);
-  static const Color _darkSecondaryBackground = Color(0xFF2C2C2E);
   static const Color _darkTertiaryBackground = Color(0xFF3A3A3C);
-  static const Color _darkPrimaryText = Color(0xFFFFFFFF);
-  static const Color _darkSecondaryText = Color(0xFFAEAEB2);
-  static const Color _darkSeparator = Color(0xFF38383A);
 
   @override
   void initState() {
@@ -111,9 +104,8 @@ class _SettingsState extends State<Settings> {
     }
   }
 
-  /// Handle user logout functionality - FIXED
   Future<void> _logout() async {
-    Navigator.pop(context); // Close the dialog first
+    Navigator.pop(context); 
 
     setState(() {
       isLoading = true;
@@ -160,7 +152,6 @@ class _SettingsState extends State<Settings> {
   }
 
   Color _adaptiveBackground(BuildContext context) {
-    // Return transparent since we're using gradient background
     return const Color(0x00000000);
   }
 
@@ -168,30 +159,30 @@ class _SettingsState extends State<Settings> {
     return isDarkMode
         ? const Color(0xFF2C2C2E).withOpacity(
             0.95,
-          ) // More opaque for better contrast
+          )
         : const Color(
             0xFFFFFDF8,
-          ).withOpacity(0.95); // Warmer white with opacity
+          ).withOpacity(0.95); 
   }
 
   Color _adaptivePrimaryText(BuildContext context) {
     return isDarkMode
-        ? const Color(0xFFE5E5E7) // Brighter white for better contrast
+        ? const Color(0xFFE5E5E7) 
         : const Color(
             0xFF2C1810,
-          ); // Darker for better contrast against gradient
+          ); 
   }
 
   Color _adaptiveSecondaryText(BuildContext context) {
     return isDarkMode
-        ? const Color(0xFFD1D1D6) // Brighter grey
-        : const Color(0xFF8B4513); // Darker brown for better contrast
+        ? const Color(0xFFD1D1D6) 
+        : const Color(0xFF8B4513); 
   }
 
   Color _adaptiveSeparator(BuildContext context) {
     return isDarkMode
         ? const Color(0xFF48484A).withOpacity(0.8)
-        : const Color(0xFFD2691E).withOpacity(0.2); // Orange-tinted separator
+        : const Color(0xFFD2691E).withOpacity(0.2); 
   }
 
   void _showResetPasswordDialog() {
@@ -346,8 +337,7 @@ class _SettingsState extends State<Settings> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: _adaptiveSecondaryBackground(context),
-          borderRadius: BorderRadius.circular(12), // Slightly more rounded
-          // ADD SUBTLE SHADOW FOR BETTER DEPTH
+          borderRadius: BorderRadius.circular(12), 
           boxShadow: [
             BoxShadow(
               color: isDarkMode
@@ -357,7 +347,6 @@ class _SettingsState extends State<Settings> {
               offset: const Offset(0, 4),
             ),
           ],
-          // ADD SUBTLE BORDER FOR BETTER DEFINITION
           border: Border.all(
             color: isDarkMode
                 ? CupertinoColors.systemOrange.withOpacity(0.3)
@@ -543,8 +532,8 @@ class _SettingsState extends State<Settings> {
           color: isDarkMode
               ? CupertinoColors.systemOrange.withOpacity(
                   0.8,
-                ) // Orange tint in dark mode
-              : const Color(0xFF8B4513), // Brown tint in light mode
+                ) 
+              : const Color(0xFF8B4513), 
         ),
       ),
     );
@@ -558,7 +547,6 @@ class _SettingsState extends State<Settings> {
         brightness: isDarkMode ? Brightness.dark : Brightness.light,
       ),
       child: Container(
-        // CORRECTED GRADIENT TO MATCH HOME PAGE EXACTLY
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -566,21 +554,21 @@ class _SettingsState extends State<Settings> {
             colors: isDarkMode
                 ? [
                     const Color(0xFF1C1C1E),
-                    const Color(0xFF3D2914), // Darker orange - SAME AS HOME
-                    const Color(0xFF2C1810), // Medium orange - SAME AS HOME
+                    const Color(0xFF3D2914), // Darker orange
+                    const Color(0xFF2C1810), // Medium orange
                     const Color(0xFF1C1C1E),
                   ]
                 : [
-                    const Color(0xFFFFF8F0), // Light cream - SAME AS HOME
-                    const Color(0xFFFFE5CC), // Light orange - SAME AS HOME
-                    const Color(0xFFFFF0E6), // Very light orange - SAME AS HOME
-                    CupertinoColors.white, // SAME AS HOME
+                    const Color(0xFFFFF8F0), // Light cream
+                    const Color(0xFFFFE5CC), // Light orange
+                    const Color(0xFFFFF0E6), // Very light orange
+                    CupertinoColors.white, 
                   ],
-            stops: const [0.0, 0.3, 0.7, 1.0], // SAME STOPS AS HOME
+            stops: const [0.0, 0.3, 0.7, 1.0],
           ),
         ),
         child: CupertinoPageScaffold(
-          backgroundColor: const Color(0x00000000), // Transparent
+          backgroundColor: const Color(0x00000000),
           navigationBar: CupertinoNavigationBar(
             middle: Text(
               'Settings',
@@ -589,15 +577,15 @@ class _SettingsState extends State<Settings> {
                     ? CupertinoColors.white
                     : const Color(
                         0xFF2C1810,
-                      ), // Darker text for better contrast
+                      ),
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
             ),
             backgroundColor: const Color(
               0x00000000,
-            ), // Transparent navigation bar
-            border: null, // Remove border to blend with gradient
+            ),
+            border: null, 
           ),
           child: SafeArea(
             child: Stack(
@@ -659,8 +647,7 @@ class SettingsSection extends StatelessWidget {
       decoration: BoxDecoration(
         color:
             backgroundColor ?? CupertinoColors.secondarySystemGroupedBackground,
-        borderRadius: BorderRadius.circular(12), // More rounded corners
-        // ADD SUBTLE SHADOW AND BORDER
+        borderRadius: BorderRadius.circular(12), 
         boxShadow: [
           BoxShadow(
             color: CupertinoColors.black.withOpacity(0.05),

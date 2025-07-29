@@ -109,8 +109,4 @@ class GlobalRecipesService {
       return [];
     }
   }
-
-  // NOTE: Global recipes are read-only for regular users
-  // CREATE, UPDATE, DELETE operations should only be done by admin users
-  // through Firebase Admin SDK or secure cloud functions
 }

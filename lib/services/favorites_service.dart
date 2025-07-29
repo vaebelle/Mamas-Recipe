@@ -1,4 +1,3 @@
-// lib/services/favorites_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/favorites.dart';
@@ -81,7 +80,7 @@ class FavoritesService {
     }
   }
 
-  // READ: Get favorite recipes with full recipe data - SIMPLIFIED VERSION
+  // READ: Get favorite recipes with full recipe data 
   Future<List<Recipe>> getFavoriteRecipesWithData() async {
     if (currentUserId == null) {
       print('❌ User not authenticated');
@@ -150,7 +149,7 @@ class FavoritesService {
         }
       }
 
-      // Sort by created date manually (since we can't use orderBy)
+      // Sort by created date manually 
       favoriteRecipes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       print('📈 Final favorite recipes loaded: ${favoriteRecipes.length}');
@@ -242,7 +241,6 @@ class FavoritesService {
     }
   }
 
-  // DEBUG: Print all favorites for debugging
   Future<void> debugPrintFavorites() async {
     if (currentUserId == null) {
       print('❌ User not authenticated');

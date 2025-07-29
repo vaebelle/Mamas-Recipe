@@ -1,4 +1,3 @@
-// This file provides unified models for easier UI handling
 import 'global_recipes.dart';
 import 'custom_recipes.dart';
 
@@ -9,12 +8,12 @@ class Recipe {
   final String name;
   final String ingredients;
   final String instructions;
-  final String imageUrl;  // Updated to match ERD field naming
+  final String imageUrl;  
   final String tags;
   final RecipeType type;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final String? userId; // Only for custom recipes
+  final String? userId; 
 
   Recipe({
     required this.id,
@@ -36,7 +35,7 @@ class Recipe {
       name: global.gRecipeName,
       ingredients: global.gRecipeIngredients,
       instructions: global.gRecipeInstructions,
-      imageUrl: global.gRecipeImage,  // Updated field name
+      imageUrl: global.gRecipeImage,  
       tags: global.tags,
       type: RecipeType.global,
       createdAt: global.createdAt,
@@ -110,3 +109,5 @@ class Recipe {
   @override
   int get hashCode => Object.hash(id, type);
 }
+
+//EOF

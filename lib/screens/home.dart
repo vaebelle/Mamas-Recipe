@@ -9,7 +9,6 @@ import 'package:mama_recipe/widgets/sharedPreference.dart';
 import 'package:mama_recipe/services/recipe_service.dart';
 import 'package:mama_recipe/services/favorites_service.dart';
 import 'package:mama_recipe/models/recipe_models.dart';
-// ADD THESE IMPORTS FOR EDIT FUNCTIONALITY
 import 'package:mama_recipe/screens/editCustomRecipe.dart';
 import 'package:mama_recipe/models/custom_recipes.dart';
 
@@ -46,11 +45,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   // Cache for favorite status to avoid constant rebuilding
   Map<String, bool> _favoriteStatusCache = {};
-
-  // BUG FIX: Track current user to detect login/logout
   String? _currentUserId;
-
-  // BUG FIX: Track if data is fresh to avoid unnecessary loads
   bool _dataIsFresh = false;
 
   @override
@@ -75,18 +70,28 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _loadThemePreference();
-      // BUG FIX: Check for user changes when app resumes
       _checkUserAndRefreshIfNeeded();
     }
   }
 
-  // BUG FIX: Initialize data and track user
   Future<void> _initializeData() async {
     await _loadData();
     _currentUserId = _recipeService.customService.currentUserId;
   }
 
-  // BUG FIX: Check if user changed (login/logout) and refresh accordingly
+  Future<void> _forceRefreshData() async {
+    print('🔄 Force refreshing all data...');
+    
+    // Clear all caches
+    _favoriteStatusCache.clear();
+    _dataIsFresh = false;
+    
+    // Force reload data
+    await _loadData();
+    
+    print('✅ Force refresh completed');
+  }
+
   Future<void> _checkUserAndRefreshIfNeeded() async {
     final newUserId = _recipeService.customService.currentUserId;
 
@@ -131,7 +136,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     try {
       print('📊 Loading data...');
-
       // Load each type of data separately for better error handling
       List<Recipe> allRecipes = [];
       List<Recipe> favoriteRecipes = [];
@@ -175,8 +179,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           _allRecipes = allRecipes;
           _favoriteRecipes = favoriteRecipes;
           _myRecipes = myRecipes;
-          _dataIsFresh = true; // Mark data as fresh
-          _isLoading = false; // Data loading completed
+          _dataIsFresh = true; 
+          _isLoading = false; 
 
           print(
             '📈 Final counts - All: ${_allRecipes.length}, Favorites: ${_favoriteRecipes.length}, My: ${_myRecipes.length}',
@@ -189,7 +193,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       print('❌ Error loading data: $e');
       if (mounted) {
         setState(() {
-          _isLoading = false; // Stop loading on error
+          _isLoading = false;
         });
         _showErrorDialog('Failed to load recipes. Please try again.');
       }
@@ -217,7 +221,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
-  // BUG FIX: Smart favorite cache update that properly handles favorites list
   void _updateFavoriteCacheQuickly(
     String recipeId,
     String recipeType,
@@ -267,7 +270,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     print('⚡ Quick cache update for $recipeId: $isFavorite');
   }
 
-  // BUG FIX: Ensure filtering always happens when switching tabs
   void _filterRecipes() {
     List<Recipe> baseRecipes;
 
@@ -292,7 +294,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           .where((recipe) => recipe.containsSearchTerms(_searchQuery))
           .toList();
     }
-
     print(
       '🔍 Filtered to ${_displayedRecipes.length} recipes for category ${_selectedCategory.name}',
     );
@@ -344,8 +345,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     setState(() {
                       _isRefreshing = true;
                     });
-                    
-                    // BUG FIX: Force fresh data on manual refresh
+
+                    // Clear all caches and force refresh
+                    _favoriteStatusCache.clear();
                     _dataIsFresh = false;
                     await _loadData();
                     
@@ -418,7 +420,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             if (value != null && value != _selectedCategory) {
                               setState(() {
                                 _selectedCategory = value;
-                                // BUG FIX: Immediately filter when switching tabs
                                 _filterRecipes();
                               });
                               print(
@@ -635,7 +636,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
-  // FIXED: Edit Recipe Navigation - Navigate directly to EditCustomRecipe
   Future<void> _handleEditRecipe(Recipe recipe) async {
     try {
       // Convert Recipe to CustomRecipes object
@@ -731,7 +731,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
-  // BUG FIX: Simplified favorite toggle - let RecipeDetailsScreen handle the heavy lifting
   Future<void> _handleFavoriteToggle(Recipe recipe) async {
     print('🔄 Toggling favorite for: ${recipe.name}');
 
@@ -739,7 +738,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final currentStatus = _favoriteStatusCache[favoriteKey] ?? false;
     final newStatus = !currentStatus;
 
-    // Immediate optimistic update
     _updateFavoriteCacheQuickly(
       recipe.id,
       recipe.isCustom ? 'custom' : 'global',
@@ -753,7 +751,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         print('✅ Favorite toggle successful');
       } else {
         print('❌ Favorite toggle failed');
-        // Revert optimistic update
         _updateFavoriteCacheQuickly(
           recipe.id,
           recipe.isCustom ? 'custom' : 'global',
@@ -763,7 +760,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       }
     } catch (e) {
       print('❌ Error toggling favorite: $e');
-      // Revert optimistic update
       _updateFavoriteCacheQuickly(
         recipe.id,
         recipe.isCustom ? 'custom' : 'global',
@@ -774,7 +770,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   Future<void> _handleRecipeTap(Recipe recipe) async {
-    // Record view for analytics (non-blocking)
     _recipeService.recordRecipeView(recipe).catchError((e) {
       print('❌ Analytics error: $e');
     });
@@ -825,7 +820,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       case RecipeCategory.favorites:
         return 'Favorites';
       case RecipeCategory.myRecipes:
-        return 'Personal Recipes'; // Updated to match the "Personal" label
+        return 'Personal Recipes'; 
     }
   }
 
@@ -838,10 +833,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       ),
     );
 
-    // BUG FIX: Immediately reload when recipe is created
     if (result != null && result['success'] == true) {
       print('✅ Recipe created, refreshing data...');
-      _dataIsFresh = false; // Force fresh data
+      _dataIsFresh = false; 
       await _loadData();
     }
 

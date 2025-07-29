@@ -142,3 +142,5 @@ class CustomRecipes {
   @override
   int get hashCode => cRecipeId.hashCode;
 }
+
+//EOF

@@ -17,7 +17,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
   final TextEditingController _tagsController = TextEditingController();
 
   String?
-  _selectedImageUrl; // Changed from _selectedImagePath to _selectedImageUrl
+  _selectedImageUrl; 
   final CustomRecipesService _customRecipesService = CustomRecipesService();
 
   bool _isLoading = false;
@@ -40,7 +40,6 @@ class _CreateRecipeState extends State<CreateRecipe> {
         brightness: isDarkMode ? Brightness.dark : Brightness.light,
       ),
       child: Container(
-        // CORRECTED GRADIENT TO MATCH HOME PAGE EXACTLY
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -48,23 +47,23 @@ class _CreateRecipeState extends State<CreateRecipe> {
             colors: isDarkMode
                 ? [
                     const Color(0xFF1C1C1E),
-                    const Color(0xFF3D2914), // Darker orange - SAME AS HOME
-                    const Color(0xFF2C1810), // Medium orange - SAME AS HOME
+                    const Color(0xFF3D2914), 
+                    const Color(0xFF2C1810), 
                     const Color(0xFF1C1C1E),
                   ]
                 : [
-                    const Color(0xFFFFF8F0), // Light cream - SAME AS HOME
-                    const Color(0xFFFFE5CC), // Light orange - SAME AS HOME
-                    const Color(0xFFFFF0E6), // Very light orange - SAME AS HOME
-                    CupertinoColors.white, // SAME AS HOME
+                    const Color(0xFFFFF8F0), 
+                    const Color(0xFFFFE5CC), 
+                    const Color(0xFFFFF0E6), 
+                    CupertinoColors.white, 
                   ],
-            stops: const [0.0, 0.3, 0.7, 1.0], // SAME STOPS AS HOME
+            stops: const [0.0, 0.3, 0.7, 1.0], 
           ),
         ),
         child: CupertinoPageScaffold(
-          backgroundColor: const Color(0x00000000), // Transparent
+          backgroundColor: const Color(0x00000000), 
           navigationBar: CupertinoNavigationBar(
-            backgroundColor: const Color(0x00000000), // Transparent
+            backgroundColor: const Color(0x00000000), 
             border: null,
             leading: CupertinoButton(
               padding: EdgeInsets.zero,
@@ -77,7 +76,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
                           ? const Color(0xFFAEAEB2)
                           : const Color(
                               0xFF2C1810,
-                            )), // Darker for better contrast
+                            )),
                 size: 24,
               ),
             ),
@@ -88,7 +87,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
                     ? CupertinoColors.white
                     : const Color(
                         0xFF2C1810,
-                      ), // Darker text for better contrast
+                      ), 
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -125,7 +124,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
                             ? const Color(0xFFAEAEB2)
                             : const Color(
                                 0xFF8B4513,
-                              ), // Darker for better contrast
+                              ), 
                         fontSize: 16,
                       ),
                     ),
@@ -245,11 +244,10 @@ class _CreateRecipeState extends State<CreateRecipe> {
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          // CHANGED TO BLACK FOR BOTH MODES
           color: isDarkMode
               ? CupertinoColors
-                    .white // White for dark mode
-              : CupertinoColors.black, // Black for light mode
+                    .white 
+              : CupertinoColors.black, 
         ),
       ),
     );
@@ -288,18 +286,17 @@ class _CreateRecipeState extends State<CreateRecipe> {
         child: CupertinoTextField(
           controller: controller,
           placeholder: hintText,
-          // FIXED PLACEHOLDER STYLING FOR BALANCED ALIGNMENT
           placeholderStyle: TextStyle(
-            fontSize: 16, // SAME SIZE AS INPUT TEXT
+            fontSize: 16, 
             color: isDarkMode
                 ? const Color(0xFF8E8E93)
                 : CupertinoColors.systemGrey2,
-            height: 1.0, // NORMALIZED LINE HEIGHT
+            height: 1.0, 
           ),
           style: TextStyle(
-            fontSize: 16, // MATCHING TEXT SIZE
+            fontSize: 16,
             color: isDarkMode ? const Color(0xFFE5E5E7) : CupertinoColors.black,
-            height: 1.0, // MATCHING LINE HEIGHT FOR PERFECT ALIGNMENT
+            height: 1.0, 
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
           decoration: null,
@@ -344,19 +341,18 @@ class _CreateRecipeState extends State<CreateRecipe> {
         child: CupertinoTextField(
           controller: controller,
           placeholder: hintText,
-          // FIXED PLACEHOLDER STYLING FOR PERFECT ALIGNMENT WITH USER INPUT
           placeholderStyle: TextStyle(
-            fontSize: 16, // SAME SIZE AS INPUT TEXT
+            fontSize: 16, 
             color: isDarkMode
                 ? const Color(0xFF8E8E93)
                 : CupertinoColors.systemGrey2,
-            height: 1.2, // EXACT SAME LINE HEIGHT AS INPUT
+            height: 1.2, 
             leadingDistribution: TextLeadingDistribution.even,
           ),
           style: TextStyle(
-            fontSize: 16, // MATCHING TEXT SIZE
+            fontSize: 16,
             color: isDarkMode ? const Color(0xFFE5E5E7) : CupertinoColors.black,
-            height: 1.2, // EXACT SAME LINE HEIGHT AS PLACEHOLDER
+            height: 1.2, 
             leadingDistribution: TextLeadingDistribution.even,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
@@ -368,7 +364,6 @@ class _CreateRecipeState extends State<CreateRecipe> {
           textAlignVertical: TextAlignVertical.top,
           keyboardType: TextInputType.multiline,
           textInputAction: TextInputAction.newline,
-          // FORCE CONSISTENT TEXT BASELINE
           strutStyle: const StrutStyle(
             height: 1.2,
             leading: 0.0,
@@ -380,7 +375,6 @@ class _CreateRecipeState extends State<CreateRecipe> {
   }
 
   Future<void> _saveRecipe() async {
-    // Validate form
     if (_titleController.text.trim().isEmpty) {
       _showErrorDialog('Please enter a recipe title');
       return;
@@ -401,24 +395,21 @@ class _CreateRecipeState extends State<CreateRecipe> {
     });
 
     try {
-      // Clean and format ingredients
       final ingredients = _ingredientsController.text
           .split('\n')
           .map((e) => e.trim())
           .where((e) => e.isNotEmpty)
           .join('\n');
 
-      // Clean and format instructions
       final instructions = _methodController.text.trim();
 
-      // Clean and format tags
       final tags = _tagsController.text
           .split(',')
           .map((e) => e.trim().toLowerCase())
           .where((e) => e.isNotEmpty)
           .join(',');
 
-      // Use image URL directly from RecipeImagePicker (it handles Supabase upload)
+      // Use image URL directly from RecipeImagePicker
       String? imageUrl = _selectedImageUrl;
 
       // Create recipe using Firebase service
@@ -451,7 +442,7 @@ class _CreateRecipeState extends State<CreateRecipe> {
                     Navigator.pop(context, {
                       'success': true,
                       'recipeId': recipeId,
-                    }); // Return success flag only, don't return recipe data
+                    }); 
                   },
                 ),
               ],

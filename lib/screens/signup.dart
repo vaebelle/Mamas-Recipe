@@ -17,7 +17,6 @@ class Signup extends StatefulWidget {
 }
 
 class _SignupState extends State<Signup> {
-  // FIXED: Separate controllers for each field
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -102,7 +101,6 @@ class _SignupState extends State<Signup> {
       isLoading = true;
     });
 
-    // ADDED: Basic validation for all fields
     if (firstNameController.text.trim().isEmpty) {
       setState(() {
         errorMessage = "Please enter your first name";
@@ -162,21 +160,19 @@ class _SignupState extends State<Signup> {
       );
 
       if (userCredential.user != null) {
-        // Set the display name in Firebase Auth
         final displayName =
             '${firstNameController.text.trim()} ${lastNameController.text.trim()}';
         await userCredential.user!.updateDisplayName(displayName);
 
-        // Reload the user to get the updated display name
         await userCredential.user!.reload();
 
-        // ADDED: Create Users model and save to Firestore
+        // Create Users model and save to Firestore
         final newUser = Users(
           userId: userCredential.user!.uid,
           email: emailController.text.trim(),
           firstName: firstNameController.text.trim(),
           lastName: lastNameController.text.trim(),
-          password: '', // Don't store actual password for security
+          password: '', 
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
@@ -188,14 +184,13 @@ class _SignupState extends State<Signup> {
             .set(newUser.toMap());
 
         if (mounted) {
-          // Clear form fields
           firstNameController.clear();
           lastNameController.clear();
           emailController.clear();
           passwordController.clear();
           confirmPasswordController.clear();
 
-          // FIXED: Navigate to Authentication widget instead of directly to HomePage
+          // Navigate to Authentication widget instead of directly to HomePage
           Navigator.of(context).pushAndRemoveUntil(
             CupertinoPageRoute(builder: (context) => const Authentication()),
             (route) => false,
@@ -206,7 +201,6 @@ class _SignupState extends State<Signup> {
       if (mounted) {
         setState(() {
           isLoading = false;
-          // Use the auth service's error message handler for consistency
           errorMessage = authService.value.getErrorMessage(e);
         });
       }
@@ -283,7 +277,6 @@ class _SignupState extends State<Signup> {
 
                 const SizedBox(height: 50),
 
-                // FIXED: Use firstNameController
                 CustomTextField(
                   controller: firstNameController,
                   hintText: "First Name",
@@ -292,7 +285,6 @@ class _SignupState extends State<Signup> {
 
                 const SizedBox(height: 20),
 
-                // FIXED: Use lastNameController
                 CustomTextField(
                   controller: lastNameController,
                   hintText: "Last Name",
@@ -301,7 +293,6 @@ class _SignupState extends State<Signup> {
 
                 const SizedBox(height: 20),
 
-                // FIXED: Keep emailController for email field
                 CustomTextField(
                   controller: emailController,
                   hintText: "Email",

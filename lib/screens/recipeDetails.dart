@@ -1,12 +1,8 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
-import 'package:mama_recipe/widgets/sharedPreference.dart';
 import 'package:mama_recipe/services/favorites_service.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/http.dart' as http;
 
 class RecipeDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> recipe;
@@ -52,21 +48,21 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
             colors: _isDarkMode
                 ? [
                     const Color(0xFF1C1C1E),
-                    const Color(0xFF3D2914), // Darker orange
-                    const Color(0xFF2C1810), // Medium orange
+                    const Color(0xFF3D2914), 
+                    const Color(0xFF2C1810), 
                     const Color(0xFF1C1C1E),
                   ]
                 : [
-                    const Color(0xFFFFF8F0), // Light cream
-                    const Color(0xFFFFE5CC), // Light orange
-                    const Color(0xFFFFF0E6), // Very light orange
+                    const Color(0xFFFFF8F0), 
+                    const Color(0xFFFFE5CC),
+                    const Color(0xFFFFF0E6), 
                     CupertinoColors.white,
                   ],
             stops: const [0.0, 0.3, 0.7, 1.0],
           ),
         ),
         child: CupertinoPageScaffold(
-          backgroundColor: const Color(0x00000000), // Transparent
+          backgroundColor: const Color(0x00000000),
         navigationBar: CupertinoNavigationBar(
           middle: Text(
             widget.recipe['name'] ?? 'Recipe Details',
@@ -82,7 +78,6 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
           leading: CupertinoButton(
             padding: EdgeInsets.zero,
             onPressed: () {
-              // BUG FIX: Only return data if favorite actually changed
               if (_favoriteChanged) {
                 Navigator.pop(context, {
                   'favoriteChanged': true,
@@ -126,7 +121,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
                 ),
           backgroundColor: CupertinoColors.white.withOpacity(
             0.0,
-          ), // Make navigation bar transparent - SAME AS HOME
+          ), 
           border: null,
         ),
         child: Stack(
@@ -134,7 +129,6 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
             SafeArea(
               child: GestureDetector(
                 onTap: () {
-                  // Dismiss keyboard when tapping on background
                   FocusScope.of(context).unfocus();
                 },
                 behavior: HitTestBehavior.opaque,
@@ -184,7 +178,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
                           ),
                           const SizedBox(
                             height: 80,
-                          ), // Extra space for floating button
+                          ),
                         ],
                       ),
                     ),
@@ -229,7 +223,6 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
     );
   }
 
-  // BUG FIX: Ultra-fast favorite toggle with correct service method names
   Future<void> _toggleFavorite() async {
     if (_isUpdatingFavorite) return;
 
@@ -254,13 +247,13 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
       bool success;
 
       if (newStatus) {
-        // Adding to favorites - use correct method name
+        // Adding to favorites
         success = await _favoritesService.addToFavorites(
           recipeId: recipeId,
           recipeType: recipeType,
         );
       } else {
-        // Removing from favorites - use correct method name
+        // Removing from favorites 
         success = await _favoritesService.removeFromFavorites(
           recipeId: recipeId,
           recipeType: recipeType,
@@ -296,7 +289,6 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
 
   Future<void> _exportToPDF() async {
     try {
-      // Show loading indicator
       showCupertinoDialog(
         context: context,
         builder: (context) => CupertinoTheme(
@@ -506,8 +498,6 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
       );
 
       // Check if PDF was actually processed/saved
-      // The result is true if the user completed the action (save/print/share)
-      // The result is false if the user cancelled
       if (result) {
         // Only show success if user completed the action
         if (mounted) {
@@ -565,7 +555,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
   }
 
   List<String> _parseMethodIntoSteps(String method) {
-    // Parse instructions into steps - handle both formats consistently (same as UI)
+    // Parse instructions into steps 
     List<String> steps = [];
     
     // First, check if it already contains numbered steps (1., 2., etc.)
@@ -795,7 +785,7 @@ class _RecipeDetailsScreenState extends State<RecipeDetailsScreen> {
       );
     }
 
-    // Parse instructions into steps - handle both formats consistently
+    // Parse instructions into steps 
     List<String> steps = [];
     
     // First, check if it already contains numbered steps (1., 2., etc.)

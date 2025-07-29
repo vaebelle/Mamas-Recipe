@@ -4,7 +4,7 @@ class UserGlobalRecipeAccess {
   final String userId;
   final String gRecipeId;
   final String accessType;
-  final DateTime createdAt;  // Note: ERD doesn't have created_at, but keeping for tracking
+  final DateTime createdAt;  
 
   UserGlobalRecipeAccess({
     required this.userId,
@@ -47,7 +47,7 @@ class UserGlobalRecipeAccess {
     };
   }
 
-  // Access type constants (as per ERD note: 'view, favorite, etc.')
+  // Access type constants 
   static const String accessTypeView = 'view';
   static const String accessTypeFavorite = 'favorite';
 
@@ -55,7 +55,7 @@ class UserGlobalRecipeAccess {
   bool get isView => accessType == accessTypeView;
   bool get isFavorite => accessType == accessTypeFavorite;
 
-  // Create composite key for Firestore document ID (since ERD shows composite primary key)
+  // Create composite key for Firestore document ID 
   String get compositeKey => '${userId}_${gRecipeId}_$accessType';
 
   @override
@@ -75,3 +75,5 @@ class UserGlobalRecipeAccess {
   @override
   int get hashCode => Object.hash(userId, gRecipeId, accessType);
 }
+
+//EOF

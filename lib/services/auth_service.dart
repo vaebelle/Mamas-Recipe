@@ -12,7 +12,7 @@ class AuthService {
 
   Stream<User?> get authStateChanges => firebaseAuth.authStateChanges();
 
-  // Password validation function (only for account creation)
+  // Password validation function
   String? validatePassword(String password) {
     List<String> errors = [];
 
@@ -44,7 +44,7 @@ class AuthService {
       return errors.join("\n");
     }
 
-    return null; // Password is valid
+    return null;
   }
 
   // Check if email exists in Firebase Auth
@@ -96,18 +96,16 @@ class AuthService {
     }
   }
 
-  // FIXED: Simplified sign-in method that lets Firebase handle authentication directly
   Future<UserCredential> signIn({
     required String email,
     required String password,
   }) async {
     try {
       return await firebaseAuth.signInWithEmailAndPassword(
-        email: email.trim(), // Trim whitespace
+        email: email.trim(), 
         password: password,
       );
     } catch (e) {
-      // Let Firebase handle the error with proper error codes
       debugPrint("Sign-in error: $e");
       rethrow;
     }
@@ -117,7 +115,6 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    // Validate password before creating account
     final passwordError = validatePassword(password);
     if (passwordError != null) {
       throw FirebaseAuthException(
@@ -128,7 +125,7 @@ class AuthService {
 
     try {
       return await firebaseAuth.createUserWithEmailAndPassword(
-        email: email.trim(), // Trim whitespace
+        email: email.trim(), 
         password: password,
       );
     } catch (e) {
@@ -214,7 +211,6 @@ class AuthService {
     }
   }
 
-  // ADDED: Helper method to get user-friendly error messages
   String getErrorMessage(FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':

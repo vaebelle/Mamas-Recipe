@@ -5,7 +5,7 @@ class GlobalRecipes {
   final String gRecipeName;
   final String gRecipeIngredients;
   final String gRecipeInstructions;
-  final String gRecipeImage;  // Changed from gRecipeImageUrl to match ERD
+  final String gRecipeImage; 
   final String tags;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -44,7 +44,7 @@ class GlobalRecipes {
       gRecipeName: data['gRecipe_name'] ?? '',
       gRecipeIngredients: data['gRecipe_ingredients'] ?? '',
       gRecipeInstructions: data['gRecipe_instructions'] ?? '',
-      gRecipeImage: imageUrl,  // Use cleaned URL
+      gRecipeImage: imageUrl,  
       tags: data['tags'] ?? '',
       createdAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -72,7 +72,7 @@ class GlobalRecipes {
       gRecipeName: map['gRecipe_name'] ?? '',
       gRecipeIngredients: map['gRecipe_ingredients'] ?? '',
       gRecipeInstructions: map['gRecipe_instructions'] ?? '',
-      gRecipeImage: imageUrl,  // Use cleaned URL
+      gRecipeImage: imageUrl, 
       tags: map['tags'] ?? '',
       createdAt: map['created_at'] is Timestamp
           ? (map['created_at'] as Timestamp).toDate()
@@ -93,7 +93,7 @@ class GlobalRecipes {
       'gRecipe_name': gRecipeName,
       'gRecipe_ingredients': gRecipeIngredients,
       'gRecipe_instructions': gRecipeInstructions,
-      'gRecipe_image': gRecipeImage,  // Updated field name
+      'gRecipe_image': gRecipeImage,  
       'tags': tags,
       'created_at': Timestamp.fromDate(createdAt),
       'updated_at': Timestamp.fromDate(updatedAt),
@@ -154,3 +154,5 @@ class GlobalRecipes {
   @override
   int get hashCode => gRecipeId.hashCode;
 }
+
+//EOF

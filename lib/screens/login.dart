@@ -18,8 +18,8 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
-  bool isLoginLoading = false; // Separate loading state for login
-  bool isGoogleLoading = false; // Separate loading state for Google
+  bool isLoginLoading = false; 
+  bool isGoogleLoading = false; 
 
   @override
   void dispose() {
@@ -30,7 +30,7 @@ class _LoginState extends State<Login> {
 
   void signIn() async {
     setState(() {
-      isLoginLoading = true; // Only set login loading
+      isLoginLoading = true; 
     });
 
     try {
@@ -39,8 +39,6 @@ class _LoginState extends State<Login> {
         password: passwordController.text.trim(),
       );
 
-      // No need to manually navigate - AuthWrapper will handle this automatically
-      // when the authentication state changes
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         String errorMessage;
@@ -78,7 +76,7 @@ class _LoginState extends State<Login> {
     } finally {
       if (mounted) {
         setState(() {
-          isLoginLoading = false; // Reset only login loading
+          isLoginLoading = false;
         });
       }
     }
@@ -86,14 +84,14 @@ class _LoginState extends State<Login> {
 
   void signInWithGoogle() async {
     setState(() {
-      isGoogleLoading = true; // Only set Google loading
+      isGoogleLoading = true; 
     });
 
     try {
       final userCredential = await authService.value.loginWithGoogle();
 
       if (userCredential != null && mounted) {
-        // ADDED: Check if user document exists in Firestore, create if not
+        // Check if user document exists in Firestore, create if not
         final userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(userCredential.user!.uid)
@@ -112,7 +110,7 @@ class _LoginState extends State<Login> {
             email: userCredential.user?.email ?? '',
             firstName: firstName,
             lastName: lastName,
-            password: '', // Google users don't have passwords
+            password: '', 
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
           );
@@ -124,7 +122,6 @@ class _LoginState extends State<Login> {
               .set(newUser.toMap());
         }
 
-        // Authentication widget will handle navigation automatically
       } else if (mounted) {
         _showErrorDialog(
           'Sign In Failed',
@@ -154,7 +151,7 @@ class _LoginState extends State<Login> {
     } finally {
       if (mounted) {
         setState(() {
-          isGoogleLoading = false; // Reset only Google loading
+          isGoogleLoading = false;
         });
       }
     }
@@ -254,7 +251,7 @@ class _LoginState extends State<Login> {
 
                     const SizedBox(height: 20),
 
-                    // LOGIN BUTTON - Only shows loading when isLoginLoading is true
+                    // LOGIN BUTTON 
                     Button(
                       onTap: (isLoginLoading || isGoogleLoading)
                           ? null
@@ -265,7 +262,7 @@ class _LoginState extends State<Login> {
 
                     const SizedBox(height: 20),
 
-                    // GOOGLE BUTTON - Only shows loading when isGoogleLoading is true
+                    // GOOGLE BUTTON
                     Button(
                       onTap: (isLoginLoading || isGoogleLoading)
                           ? null

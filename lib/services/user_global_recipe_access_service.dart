@@ -5,7 +5,7 @@ import '../models/user_global_recipe_access.dart';
 class UserGlobalRecipeAccessService {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final FirebaseAuth auth = FirebaseAuth.instance;
-  final String collection = 'user_global_recipe_access';  // Updated to match ERD exactly
+  final String collection = 'user_global_recipe_access'; 
 
   String? get currentUserId => auth.currentUser?.uid;
 
@@ -26,10 +26,10 @@ class UserGlobalRecipeAccessService {
         createdAt: DateTime.now(),
       );
 
-      // Use composite key as document ID to match ERD's composite primary key
+      // Use composite key as document ID 
       final docId = accessRecord.compositeKey;
       
-      // Check if access already recorded (composite key ensures uniqueness)
+      // Check if access already recorded 
       final existingDoc = await firestore
           .collection(collection)
           .doc(docId)

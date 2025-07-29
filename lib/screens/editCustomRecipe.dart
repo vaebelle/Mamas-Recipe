@@ -82,17 +82,17 @@ class _EditCustomRecipeState extends State<EditCustomRecipe> {
             colors: isDarkMode
                 ? [
                     const Color(0xFF1C1C1E),
-                    const Color(0xFF3D2914), // Darker orange - SAME AS HOME
-                    const Color(0xFF2C1810), // Medium orange - SAME AS HOME
+                    const Color(0xFF3D2914), // Darker orange 
+                    const Color(0xFF2C1810), // Medium orange 
                     const Color(0xFF1C1C1E),
                   ]
                 : [
-                    const Color(0xFFFFF8F0), // Light cream - SAME AS HOME
-                    const Color(0xFFFFE5CC), // Light orange - SAME AS HOME
-                    const Color(0xFFFFF0E6), // Very light orange - SAME AS HOME
-                    CupertinoColors.white, // SAME AS HOME
+                    const Color(0xFFFFF8F0), // Light cream 
+                    const Color(0xFFFFE5CC), // Light orange 
+                    const Color(0xFFFFF0E6), // Very light orange 
+                    CupertinoColors.white, 
                   ],
-            stops: const [0.0, 0.3, 0.7, 1.0], // SAME STOPS AS HOME
+            stops: const [0.0, 0.3, 0.7, 1.0], 
           ),
         ),
         child: CupertinoPageScaffold(
@@ -100,7 +100,7 @@ class _EditCustomRecipeState extends State<EditCustomRecipe> {
           navigationBar: CupertinoNavigationBar(
             backgroundColor: CupertinoColors.white.withOpacity(
               0.0,
-            ), // Make navigation bar transparent - SAME AS HOME
+            ), // Transparent navigation bar
             border: null,
           leading: CupertinoButton(
             padding: EdgeInsets.zero,
